@@ -61,7 +61,7 @@ export class LoanFactoryService {
     capital: number,
     daysLate: number,
     commission: number,
-    countAsPaid: boolean,
+    installmentsPaid: number,
   ) {
     const newCurrentInterest = loan.currentInterest - interestPaid
     const currentInterest = newCurrentInterest < 0 ? 0 : newCurrentInterest
@@ -75,9 +75,8 @@ export class LoanFactoryService {
       commissionsPaid,
     }
 
-    if (countAsPaid) {
-      data.installmentsPaid = Number(loan.installmentsPaid) + 1
-    }
+    data.installmentsPaid = Number(loan.installmentsPaid) + installmentsPaid
+
     if (capital > 0) {
       data.debt = Number(loan.debt) - capital
     }

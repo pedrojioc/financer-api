@@ -7,7 +7,7 @@ export class CreateCommissionDto {
 
   @IsPositive()
   @IsNotEmpty()
-  readonly installmentId: number
+  readonly paymentId: number
 
   @IsPositive()
   interestAmount: number

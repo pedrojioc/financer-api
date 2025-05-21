@@ -8,11 +8,13 @@ import {
   UpdateDateColumn,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { PaymentMethod } from 'src/payment-methods/entities/payment-method.entity'
 import { Installment } from './installment.entity'
 import { Loan } from './loan.entity'
+import { Commission } from 'src/employees/entities/commission.entity'
 
 @Entity({ name: 'payments' })
 export class Payment {
@@ -79,4 +81,7 @@ export class Payment {
     inverseJoinColumn: { name: 'installment_id' },
   })
   installments: Installment[]
+
+  @OneToMany(() => Commission, (commission) => commission.payment)
+  commissions: Commission[]
 }

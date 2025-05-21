@@ -10,9 +10,18 @@ import { PositionsController } from './controllers/positions.controller'
 import { EmployeeBalance } from './entities/employee-balance.entity'
 import { Commission } from './entities/commission.entity'
 import { CommissionsService } from './services/commissions.service'
+import { CommissionInstallment } from './entities/commission-installment.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Employee, Position, EmployeeBalance, Commission])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Employee,
+      Position,
+      EmployeeBalance,
+      Commission,
+      CommissionInstallment,
+    ]),
+  ],
   controllers: [EmployeesController, PositionsController],
   providers: [PositionsService, EmployeesService, CommissionsService],
   exports: [EmployeesService, CommissionsService],

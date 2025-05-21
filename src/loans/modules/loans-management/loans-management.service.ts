@@ -82,7 +82,7 @@ export class LoanManagementService {
     capital: number,
     daysLate: number,
     commission: number,
-    countAsPaid: boolean,
+    installmentsPaid: number,
   ) {
     const loanData = this.loanFactoryService.valuesAfterPayment(
       loan,
@@ -90,7 +90,7 @@ export class LoanManagementService {
       capital,
       daysLate,
       commission,
-      countAsPaid,
+      installmentsPaid,
     )
 
     return await this.transactionalUpdate(manager, loan.id, loanData)

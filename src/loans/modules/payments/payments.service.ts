@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 
 import { InstallmentsService } from '../installments/installments.service'
 import { LoanManagementService } from '../loans-management/loans-management.service'
@@ -6,18 +12,18 @@ import { AddPaymentDto } from './dtos/add-payment.dto'
 
 import { InstallmentFactoryService } from '../installments/installment-factory.service'
 import { PayOffDto } from 'src/loans/dtos/pay-off.dto'
-import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
 import { CommissionsService } from 'src/employees/services/commissions.service'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
-import { DataSource, EntityManager } from 'typeorm'
+import { DataSource, EntityManager, In } from 'typeorm'
 import { EmployeesService } from 'src/employees/services/employees.service'
 import { Payment } from 'src/loans/entities/payments.entity'
 import { CreatePaymentDto } from './dtos/create-payment.dto'
 import { NewCapitalPaymentDto } from './dtos/new-capital-payment.dto'
 import { FilterPaymentsDto } from './dtos/filter-payments.dto'
 import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
+import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 
 @Injectable()
 export class PaymentsService {
@@ -76,17 +82,23 @@ export class PaymentsService {
     }
   }
 
-  async transactionalCreate(manager: EntityManager, createPaymentDto: CreatePaymentDto) {
+  async transactionalCreate(
+    manager: EntityManager,
+    createPaymentDto: CreatePaymentDto,
+  ): Promise<number> {
     const rs = await manager.insert(Payment, createPaymentDto)
-    // Si es un pago extra a capital, no se relaciona con cuotas
-    if (createPaymentDto.installmentIds.length === 0) return rs
-    await manager
-      .createQueryBuilder()
-      .relation(Payment, 'installments')
-      .of(rs.raw.insertId)
-      .add(createPaymentDto.installmentIds)
+    const paymentId = rs.identifiers[0].id
 
-    return true
+    // Si es un pago extra a capital, no se relaciona con cuotas
+    if (createPaymentDto?.installmentIds?.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(Payment, 'installments')
+        .of(paymentId)
+        .add(createPaymentDto.installmentIds)
+    }
+
+    return paymentId
   }
 
   async addPayment(paymentDto: AddPaymentDto) {
@@ -98,7 +110,7 @@ export class PaymentsService {
       await this.validatePaymentToCapital(loan.id, paymentDto.installmentId)
     }
     */
-    if (paymentDto.capital === 0 && !paymentDto.installmentIds) {
+    if (!paymentDto.installments) {
       throw new UnprocessableEntityException('Los pagos deben ser mayor a 0')
     }
 
@@ -110,6 +122,14 @@ export class PaymentsService {
     return await this.processCapitalPayment(paymentDto, loan)
   }
 
+  validateMultipleInstallments(paymentDto: AddPaymentDto) {
+    if (paymentDto.customInterest > 0)
+      throw new BadRequestException(
+        'El pago de intereses agregados o parciales solo es permitido para una cuota',
+      )
+    if (paymentDto.capital > 0)
+      throw new BadRequestException('El pago a capital solo es permitido para una cuota')
+  }
   @Transactional()
   private async processInstallmentPayment(
     paymentDto: AddPaymentDto,
@@ -118,31 +138,76 @@ export class PaymentsService {
   ) {
     try {
       const employeeId = loan.employee.id
+      const installmentsNumber = paymentDto.installments.length
+      const isMultiPayment = installmentsNumber > 1
 
-      // Temporalmente no está habilitado el de multiples cuotas
-      let installment = await this.installmentService.findOne(paymentDto.installmentIds[0])
-      const installmentDataUpd = this.installmentFactoryService.update(installment, paymentDto)
-      const interestToPay = installmentDataUpd.interestPaid - installment.interestPaid
+      if (isMultiPayment) this.validateMultipleInstallments(paymentDto)
 
-      installment = await this.installmentService.makePayment(
-        manager,
-        installment.id,
-        installmentDataUpd,
+      const installmentsIds = paymentDto.installments
+      const installments = await this.installmentService.findAll({
+        id: In(installmentsIds),
+      })
+      const installmentMap = Object.fromEntries(
+        installments.map((installment) => [installment.id, installment]),
+      )
+      const updateDtos = this.installmentFactoryService.generateInstallmentObject(
+        installmentMap,
+        paymentDto,
+        loan.installmentTypeId,
       )
 
-      let commissionAmount = 0
-      const isFullyPaid = installment.installmentStateId === INSTALLMENT_STATES.PAID
-      if (loan.commissionRate > 0 && isFullyPaid) {
-        const commissionData = this.commissionService.createCommissionData(
-          loan.commissionRate,
-          employeeId,
-          installment.id,
-          installment.interestPaid,
-        )
-        commissionAmount = commissionData.amount
+      let totalToCapital = 0
+      let totalToInterest = 0
+      let totalCommission = 0
+      let installmentsPaid = 0
+      const commissionDetails = []
+      for (const installmentId of paymentDto.installments) {
+        const origInstallment = installmentMap[installmentId]
+        const dto = updateDtos[installmentId]
+        const interestToPay = dto.interestPaid - origInstallment.interestPaid
 
-        await this.commissionService.transactionalCreate(manager, commissionData)
-        await this.employeeService.transactionalUpdateBalance(manager, employeeId, commissionAmount)
+        totalToCapital += dto.capital
+        totalToInterest += interestToPay
+
+        await this.installmentService.makePayment(manager, installmentId, dto)
+
+        // Generate Commission Details
+        const isPaid = dto.installmentStateId === INSTALLMENT_STATES.PAID
+        if (loan.commissionRate > 0 && isPaid) {
+          installmentsPaid++
+          const commissionAmount = (origInstallment.interest * loan.commissionRate) / 100
+          totalCommission += commissionAmount
+          commissionDetails.push({
+            installmentId,
+            amount: commissionAmount,
+          })
+        }
+      }
+
+      // ? Crear el pago
+      const paymentId = await this.transactionalCreate(manager, {
+        loanId: loan.id,
+        paymentMethodId: paymentDto.paymentMethodId,
+        capital: totalToCapital,
+        interest: totalToInterest,
+        total: totalToCapital + totalToInterest,
+        date: paymentDto.paymentDate,
+        installmentIds: installmentsIds,
+      })
+
+      if (totalCommission > 0) {
+        const commissionDto: CreateCommissionDto = {
+          employeeId: loan.employeeId,
+          paymentId: paymentId,
+          interestAmount: totalToInterest,
+          amount: totalCommission,
+          rate: loan.commissionRate,
+          isPaid: false,
+        }
+
+        // ? Crear la comisión
+        await this.commissionService.transactionalCreate(manager, commissionDto, commissionDetails)
+        await this.employeeService.transactionalUpdateBalance(manager, employeeId, totalCommission)
       }
 
       // ? Calcular los días de atraso
@@ -152,26 +217,15 @@ export class PaymentsService {
       await this.loanManagementService.updateLoanAfterPayment(
         manager,
         loan,
-        interestToPay,
-        paymentDto.capital,
+        totalToInterest,
+        totalToCapital,
         daysLate,
-        commissionAmount,
-        isFullyPaid,
+        totalCommission,
+        installmentsPaid,
       )
-
-      // ? Crear el pago
-      await this.transactionalCreate(manager, {
-        loanId: loan.id,
-        paymentMethodId: paymentDto.paymentMethodId,
-        capital: installment.capital,
-        interest: installment.interestPaid,
-        total: installment.capital + installment.interestPaid,
-        date: paymentDto.paymentDate,
-      })
-
-      return installment
     } catch (error) {
-      throw error
+      console.error('Error al procesar el pago', error)
+      throw new InternalServerErrorException(error)
     }
   }
 
@@ -209,7 +263,7 @@ export class PaymentsService {
       capital,
       daysLate,
       commission,
-      countAsPaid,
+      1,
     )
 
     return paymentRs
@@ -222,7 +276,7 @@ export class PaymentsService {
     if (installments.length === 0) throw new NotFoundException('Cuotas no encontrados')
 
     for (const installment of installments) {
-      const installmentUpdate = this.installmentFactoryService.update(installment, addPaymentDto)
+      // const installmentUpdate = this.installmentFactoryService.update(installment, addPaymentDto)
       // await this.processInstallmentPayment(installment, installmentUpdate, loan)
     }
   }

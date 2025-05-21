@@ -4,14 +4,17 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
 
-import { Installment } from 'src/loans/entities/installment.entity'
 import { Employee } from './employee.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
+import { Payment } from 'src/loans/entities/payments.entity'
+import { CommissionInstallment } from './commission-installment.entity'
+import { Installment } from 'src/loans/entities/installment.entity'
 
 @Entity({ name: 'commissions' })
 export class Commission {
@@ -21,6 +24,8 @@ export class Commission {
   @ManyToOne(() => Employee, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'employee_id' })
   employee: Employee
+  @Column({ name: 'employee_id', nullable: false })
+  employeeId: number
 
   @OneToOne(() => Installment, {
     nullable: false,
@@ -31,6 +36,15 @@ export class Commission {
 
   @Column({ name: 'installment_id' })
   installmentId: number
+
+  @ManyToOne(() => Payment, (payment) => payment.commissions, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'payment_id' })
+  payment: Payment
+  @Column({ name: 'payment_id', nullable: true })
+  paymentId: number
 
   @Column({
     name: 'interest_amount',
@@ -55,4 +69,10 @@ export class Commission {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
+
+  @OneToMany(
+    () => CommissionInstallment,
+    (commissionsInstallments) => commissionsInstallments.commission,
+  )
+  commissionsInstallments: CommissionInstallment[]
 }

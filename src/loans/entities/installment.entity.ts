@@ -15,6 +15,7 @@ import { InstallmentState } from './installment-state.entity'
 import { DailyInterest } from './daily-interest.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { Payment } from './payments.entity'
+import { CommissionInstallment } from 'src/employees/entities/commission-installment.entity'
 
 @Entity({ name: 'installments' })
 export class Installment {
@@ -90,4 +91,10 @@ export class Installment {
 
   @ManyToMany(() => Payment, (payment) => payment.installments)
   payments: Payment[]
+
+  @OneToMany(
+    () => CommissionInstallment,
+    (commissionsInstallments) => commissionsInstallments.installment,
+  )
+  commissionsInstallments: CommissionInstallment[]
 }

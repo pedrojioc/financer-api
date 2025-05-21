@@ -24,9 +24,6 @@ async function bootstrap() {
   const bot = app.get(getBotToken())
   app.use(bot.webhookCallback(process.env.TELEGRAM_HOOK_PATH))
 
-  // process.once('SIGINT', () => bot.stop('SIGINT'))
-  // process.once('SIGTERM', () => bot.stop('SIGTERM'))
-
   await app.listen(3000)
 }
 bootstrap()
