@@ -5,7 +5,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
@@ -14,7 +13,6 @@ import { Employee } from './employee.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { Payment } from 'src/loans/entities/payments.entity'
 import { CommissionInstallment } from './commission-installment.entity'
-import { Installment } from 'src/loans/entities/installment.entity'
 
 @Entity({ name: 'commissions' })
 export class Commission {
@@ -27,23 +25,13 @@ export class Commission {
   @Column({ name: 'employee_id', nullable: false })
   employeeId: number
 
-  @OneToOne(() => Installment, {
-    nullable: false,
-    onDelete: 'RESTRICT',
-  })
-  @JoinColumn({ name: 'installment_id' })
-  installment: Installment
-
-  @Column({ name: 'installment_id' })
-  installmentId: number
-
   @ManyToOne(() => Payment, (payment) => payment.commissions, {
-    nullable: true,
+    nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'payment_id' })
   payment: Payment
-  @Column({ name: 'payment_id', nullable: true })
+  @Column({ name: 'payment_id', nullable: false })
   paymentId: number
 
   @Column({

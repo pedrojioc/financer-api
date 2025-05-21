@@ -27,24 +27,5 @@ export class ManualTasksService {
     console.log('Payments updated successfully')
   }
 
-  async setPaymentIdOnCommissions() {
-    const commissions = await this.commissionRepo.find()
-
-    for (const commission of commissions) {
-      if (!commission.installmentId) continue
-
-      const installment = await this.dataSource
-        .getRepository(Installment)
-        .createQueryBuilder('installment')
-        .leftJoinAndSelect('installment.payments', 'payment')
-        .where('installment_id = :id', { id: commission.installmentId })
-        .getOne()
-
-      await this.commissionRepo.update(commission.id, {
-        paymentId: installment?.payments[0]?.id,
-      })
-      console.log('Commission updated successfully', commission.id)
-    }
-    console.log('Commissions updated successfully')
-  }
+  async setPaymentIdOnCommissions() {}
 }
