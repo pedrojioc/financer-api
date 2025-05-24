@@ -14,7 +14,9 @@ loanStateInProgress.updatedAt = new Date()
 export const mockLoan: Loan = {
   id: 1,
   customer: mockCustomer,
+  customerId: mockCustomer.id,
   employee: mockEmployee,
+  employeeId: mockEmployee.id,
   paymentPeriod: new PaymentPeriod(),
   loanState: loanStateInProgress,
   loanStateId: loanStateInProgress.id,
@@ -41,6 +43,10 @@ export const mockLoan: Loan = {
   installmentTypeId: 1,
   currentInstallmentNumber: 0,
   commissionRate: 0,
+  parentLoan: null,
+  parentLoanId: null,
+  payments: [],
+  refinancing: []
 }
 
 const mockLoans = new Array(10).map((i) => ({ ...mockLoan, id: i + 1 }))

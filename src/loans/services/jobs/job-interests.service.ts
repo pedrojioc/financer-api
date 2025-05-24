@@ -1,7 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
-import { addDay, addMonth, diffDays, format, isEqual, parse } from '@formkit/tempo'
+import {
+  addDay,
+  addMonth,
+  diffDays,
+  format,
+  isAfter,
+  isEqual,
+  monthDays,
+  monthEnd,
+  parse,
+} from '@formkit/tempo'
 import { INTEREST_STATE } from '../../constants/interests'
 import { Interest } from '../../entities/interest.entity'
 import { INSTALLMENT_TYPES, LOAN_STATES, PAYMENT_PERIODS } from 'src/loans/shared/constants'
@@ -14,6 +24,7 @@ import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
 import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
 import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
 import { UpdateLoanDto } from 'src/loans/dtos/loans.dto'
+import { pre } from 'telegraf/typings/format'
 
 @Injectable()
 export class JobInterestsService {
@@ -40,22 +51,32 @@ export class JobInterestsService {
     return diffDays(today, deadline)
   }
 
-  private generateInstallmentDates(
+  generateInstallmentDates(
     loan: Loan,
-    installmentNumber: number,
+    prevInstallment: Installment | null,
   ): { startsOn: Date; deadline: Date } {
     let startsOn: Date
     let deadline: Date
 
-    if (installmentNumber === 1) {
+    if (!prevInstallment) {
+      const startDay = loan.startAt.getDate()
       startsOn = addDay(loan.startAt, 1)
-      deadline = addMonth(loan.startAt, 1)
+      if (loan.paymentDay > startDay) {
+        // ? La fecha de pago es en el mismo mes que inicio el crédito
+        deadline = loan.startAt
+      } else {
+        deadline = addMonth(loan.startAt, 1)
+      }
     } else {
-      // Usamos loan.currentInstallmentNumber ya que es equivalente a installmentNumber para la cuota en progreso
-      startsOn = addMonth(loan.startAt, loan.currentInstallmentNumber)
-      deadline = addMonth(startsOn, 1)
-      // Ajustamos que la cuota inicie el día siguiente
-      startsOn.setDate(startsOn.getDate() + 1)
+      startsOn = addDay(prevInstallment.paymentDeadline, 1)
+      deadline = addMonth(prevInstallment.paymentDeadline, 1)
+    }
+
+    const isOverflow = monthDays(deadline) < loan.paymentDay
+    if (isOverflow) {
+      deadline = monthEnd(deadline)
+    } else {
+      deadline.setDate(loan.paymentDay)
     }
 
     return { startsOn, deadline }
@@ -88,11 +109,12 @@ export class JobInterestsService {
     }
   }
 
-  private generateFlexibleInstallmentData(loan: Loan, dailyInterest: number): CreateInstallmentDto {
-    const { startsOn, deadline } = this.generateInstallmentDates(
-      loan,
-      loan.currentInstallmentNumber + 1,
-    )
+  private generateFlexibleInstallmentData(
+    loan: Loan,
+    installment: Installment,
+    dailyInterest: number,
+  ): CreateInstallmentDto {
+    const { startsOn, deadline } = this.generateInstallmentDates(loan, installment)
     return {
       loanId: loan.id,
       installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
@@ -109,14 +131,10 @@ export class JobInterestsService {
 
   private async processFlexibleLoans(loan: Loan, today: Date): Promise<void> {
     const dailyInterestAmount = this.getDailyInterest(loan.debt, loan.interestRate)
-    let installment = await this.installmentService.getCurrentInstallment(loan.id, today)
     let loanValues: UpdateLoanDto = { currentInterest: loan.currentInterest + dailyInterestAmount }
 
-    if (installment) {
-      console.log(typeof installment.paymentDeadline)
-      const daily = await this.dailyInterestService.findOneByDate(installment.id, today)
-      if (daily) return
-
+    let installment = await this.installmentService.getLastInstallment(loan.id)
+    if (installment && isAfter(installment.paymentDeadline, today)) {
       const updatedValues = this.generateUpdateInterestDto(installment, dailyInterestAmount)
 
       if (this.isTodayTheDeadline(installment.paymentDeadline)) {
@@ -124,17 +142,15 @@ export class JobInterestsService {
       }
       await this.installmentService.update(installment.id, updatedValues)
     } else {
-      const newInstallment = this.generateFlexibleInstallmentData(loan, dailyInterestAmount)
+      const newInstallment = this.generateFlexibleInstallmentData(
+        loan,
+        installment,
+        dailyInterestAmount,
+      )
       installment = await this.installmentService.create(newInstallment)
       loanValues.currentInstallmentNumber = loan.currentInstallmentNumber + 1
     }
-    // Create daily interest history
-    await this.dailyInterestService.create({
-      installmentId: installment.id,
-      debt: loan.debt,
-      amount: dailyInterestAmount,
-      date: today,
-    })
+
     // Update current interest on loans table
     await this.loanManagementService.rawUpdate(loan.id, loanValues)
   }
@@ -151,9 +167,10 @@ export class JobInterestsService {
    */
   private generateFixedInstallmentData(
     loan: Loan,
+    installment: Installment,
     installmentNumber: number,
   ): CreateInstallmentDto {
-    const { startsOn, deadline } = this.generateInstallmentDates(loan, installmentNumber)
+    const { startsOn, deadline } = this.generateInstallmentDates(loan, installment)
 
     const interestRate = loan.interestRate / 100
     const installmentAmount =
@@ -179,12 +196,9 @@ export class JobInterestsService {
     }
   }
 
-  private async processFixedLoans(loan: Loan) {
-    const currentInstallment = await this.installmentService.getCurrentInstallment(
-      loan.id,
-      this.TODAY,
-    )
-    if (currentInstallment) {
+  private async processFixedLoans(loan: Loan, today: Date) {
+    const currentInstallment = await this.installmentService.getLastInstallment(loan.id)
+    if (currentInstallment && isAfter(currentInstallment.paymentDeadline, today)) {
       const updatedValues: UpdateInstallmentDto = {
         days: currentInstallment.days + 1,
       }
@@ -197,7 +211,11 @@ export class JobInterestsService {
       if (loan.currentInstallmentNumber >= loan.installmentsNumber) return true
       // Generate next installment
       const installmentNumber = loan.currentInstallmentNumber + 1
-      const installmentData = this.generateFixedInstallmentData(loan, installmentNumber)
+      const installmentData = this.generateFixedInstallmentData(
+        loan,
+        currentInstallment,
+        installmentNumber,
+      )
       await this.installmentService.create(installmentData)
       await this.loanManagementService.rawUpdate(loan.id, {
         currentInstallmentNumber: installmentNumber,
@@ -210,8 +228,9 @@ export class JobInterestsService {
     const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
 
     for (const loan of loans) {
+      if (loan.id !== 65) continue
       if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED) {
-        await this.processFixedLoans(loan)
+        await this.processFixedLoans(loan, today)
       } else {
         await this.processFlexibleLoans(loan, today)
       }
@@ -241,11 +260,11 @@ export class JobInterestsService {
     }
 
     const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
+    const overdueInstallmentIds = []
     for (const loan of loans) {
       const installments = await this.installmentService.findUnpaidInstallments(loan.id)
 
-      const overdueInstallmentIds = []
-      const daysLateArray = []
+      let daysLate = 0
       for (const installment of installments) {
         const { installmentStateId } = installment
         // Check and store if the installment state needs to be updated
@@ -253,15 +272,15 @@ export class JobInterestsService {
 
         // Calcula y almacena los días en mora de cada cuota
         const days = this.calculateDaysLate(installment.paymentDeadline, today)
-        daysLateArray.push(days)
+        if (days > daysLate) daysLate = days
       }
-      const daysLate = Math.max(...daysLateArray)
 
       await this.loanManagementService.rawUpdate(loan.id, { daysLate })
-      await this.installmentService.bulkUpdate(overdueInstallmentIds, {
-        installmentStateId: INSTALLMENT_STATES.OVERDUE,
-      })
     }
+
+    await this.installmentService.bulkUpdate(overdueInstallmentIds, {
+      installmentStateId: INSTALLMENT_STATES.OVERDUE,
+    })
 
     return true
   }

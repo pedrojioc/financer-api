@@ -23,12 +23,15 @@ export const mockInstallment: Installment = {
   startsOn: parse('2024-09-01'),
   paymentDeadline: parse('2024-09-30'),
   days: 30,
+  installmentNumber: 1,
   capital: 0,
   interest: 200000,
   interestPaid: 0,
   total: 0,
+  paymentDate: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   dailyInterest: [],
   payments: [],
+  commissionsInstallments: []
 }

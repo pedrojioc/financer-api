@@ -127,7 +127,7 @@ export class Loan {
   @Column({ name: 'end_at', type: 'datetime' })
   endAt: Date
 
-  @Column({ name: 'payment_day', type: 'int', nullable: true })
+  @Column({ name: 'payment_day', type: 'int', nullable: false })
   paymentDay: number
 
   @Column({ name: 'last_interest_payment', type: 'date', nullable: true })
