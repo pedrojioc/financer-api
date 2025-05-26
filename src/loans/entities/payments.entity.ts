@@ -15,7 +15,6 @@ import { PaymentMethod } from 'src/payment-methods/entities/payment-method.entit
 import { Installment } from './installment.entity'
 import { Loan } from './loan.entity'
 import { Commission } from 'src/employees/entities/commission.entity'
-import { PaymentType } from './payment-type.entity'
 
 @Entity({ name: 'payments' })
 export class Payment {
@@ -31,14 +30,9 @@ export class Payment {
   @ManyToOne(() => PaymentMethod, { nullable: true, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'payment_method_id' })
   paymentMethod: PaymentMethod
+
   @Column({ name: 'payment_method_id', nullable: true })
   paymentMethodId: number
-
-  @ManyToOne(() => PaymentType, { nullable: true, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'payment_type_id' })
-  paymentType: PaymentType
-  @Column({ name: 'payment_type_id', nullable: true })
-  paymentTypeId: number
 
   @Column({
     type: 'decimal',

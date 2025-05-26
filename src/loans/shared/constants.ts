@@ -17,13 +17,6 @@ export const INSTALLMENT_TYPES = {
   FLEXIBLE: 2,
 }
 
-export const PAYMENT_TYPES = {
-  NORMAL_INSTALLMENT: 1,
-  EXTRA_CAPITAL: 2,
-  MORA: 3,
-  OTHERS: 4,
-}
-
 type Keys = keyof typeof LOAN_STATES
 
 export type LoanStateValueTypes = (typeof LOAN_STATES)[Keys]
