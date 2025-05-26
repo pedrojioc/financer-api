@@ -9,6 +9,10 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   readonly paymentMethodId: number
 
+  @IsPositive()
+  @IsNotEmpty()
+  readonly paymentTypeId: number
+
   @IsNumber()
   readonly capital: number
 

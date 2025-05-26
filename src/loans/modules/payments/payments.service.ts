@@ -24,6 +24,7 @@ import { NewCapitalPaymentDto } from './dtos/new-capital-payment.dto'
 import { FilterPaymentsDto } from './dtos/filter-payments.dto'
 import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
 import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
+import { PAYMENT_TYPES } from 'src/loans/shared/constants'
 
 @Injectable()
 export class PaymentsService {
@@ -193,6 +194,7 @@ export class PaymentsService {
         total: totalToCapital + totalToInterest,
         date: paymentDto.paymentDate,
         installmentIds: installmentsIds,
+        paymentTypeId: PAYMENT_TYPES.NORMAL_INSTALLMENT,
       })
 
       if (totalCommission > 0) {
@@ -251,6 +253,7 @@ export class PaymentsService {
       total: capital,
       installmentIds: [],
       date: paymentDto.paymentDate,
+      paymentTypeId: PAYMENT_TYPES.EXTRA_CAPITAL,
     })
     const interestPaid = 0
     const daysLate = 0
