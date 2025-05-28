@@ -1,17 +1,16 @@
 import { DataSource, EntityManager, FindOptionsWhere, MoreThan, Repository } from 'typeorm'
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { diffDays, format } from '@formkit/tempo'
+import { addDay, addMonth, diffDays, format, monthDays, monthEnd } from '@formkit/tempo'
 
 import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
 import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
 import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
 import { Installment } from 'src/loans/entities/installment.entity'
-import { Interest } from 'src/loans/entities/interest.entity'
-import { INTEREST_STATE } from 'src/loans/constants/interests'
 import { FilterPaginatorDto } from 'src/lib/filter-paginator/dtos/filter-paginator.dto'
 import { FilterPaginator } from 'src/lib/filter-paginator'
 import { InstallmentState } from 'src/loans/entities/installment-state.entity'
+import { Loan } from 'src/loans/entities/loan.entity'
 
 @Injectable()
 export class InstallmentsService {
@@ -179,5 +178,36 @@ export class InstallmentsService {
 
   countInstallments(loanId: number) {
     return this.repository.countBy({ loanId, interest: MoreThan(0) })
+  }
+
+  generateInstallmentDates(
+    loan: Loan,
+    prevInstallment: Installment | null,
+  ): { startsOn: Date; deadline: Date } {
+    let startsOn: Date
+    let deadline: Date
+
+    if (!prevInstallment) {
+      const startDay = loan.startAt.getDate()
+      startsOn = addDay(loan.startAt, 1)
+      if (loan.paymentDay > startDay) {
+        // ? La fecha de pago es en el mismo mes que inicio el crédito
+        deadline = loan.startAt
+      } else {
+        deadline = addMonth(loan.startAt, 1)
+      }
+    } else {
+      startsOn = addDay(prevInstallment.paymentDeadline, 1)
+      deadline = addMonth(prevInstallment.paymentDeadline, 1)
+    }
+
+    const isOverflow = monthDays(deadline) < loan.paymentDay
+    if (isOverflow) {
+      deadline = monthEnd(deadline)
+    } else {
+      deadline.setDate(loan.paymentDay)
+    }
+
+    return { startsOn, deadline }
   }
 }

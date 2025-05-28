@@ -77,6 +77,9 @@ export class Installment {
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   total: number
 
+  @Column({ name: 'is_prorate', type: 'boolean', nullable: false, default: false })
+  isProrate: boolean
+
   @Column({ name: 'payment_date', type: 'date', nullable: true })
   paymentDate: Date
 

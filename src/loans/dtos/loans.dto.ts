@@ -1,5 +1,15 @@
-import { IsNumber, IsNotEmpty, IsDateString, IsPositive, IsOptional } from 'class-validator'
+import {
+  IsNumber,
+  IsNotEmpty,
+  IsDateString,
+  IsPositive,
+  IsOptional,
+  IsBoolean,
+  IsDate,
+} from 'class-validator'
 import { PartialType } from '@nestjs/mapped-types'
+import { Transform } from 'class-transformer'
+import { parse } from '@formkit/tempo'
 
 export class CreateLoanDto {
   @IsPositive()
@@ -37,12 +47,22 @@ export class CreateLoanDto {
   @IsNumber()
   commissionRate: number
 
-  @IsDateString({ strict: false })
+  @IsDate()
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return parse(value, 'YYYY-MM-DD')
+
+    return value
+  })
   readonly startAt: Date
 
-  @IsDateString({ strict: false })
+  @IsDate()
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return parse(value, 'YYYY-MM-DD')
+
+    return value
+  })
   readonly endAt: Date
 
   @IsPositive()
@@ -56,6 +76,10 @@ export class CreateLoanDto {
   @IsPositive()
   @IsOptional()
   parentLoanId?: number
+
+  @IsBoolean()
+  @IsOptional()
+  readonly needsProrate?: boolean
 }
 
 export class UpdateLoanDto extends PartialType(CreateLoanDto) {

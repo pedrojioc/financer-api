@@ -14,6 +14,10 @@ import { AddPaymentDto } from '../modules/payments/dtos/add-payment.dto'
 import { PaymentPeriod } from '../entities/payment-period.entity'
 import { LoanState } from '../entities/loan-state.entity'
 import { ROLE } from 'src/roles/constants/role-ids'
+import { monthDays } from '@formkit/tempo'
+import { InstallmentsService } from '../modules/installments/installments.service'
+import { INSTALLMENT_STATES } from '../constants/installments'
+import { INSTALLMENT_TYPES } from '../shared/constants'
 
 @Injectable()
 export class LoansService {
@@ -23,6 +27,7 @@ export class LoansService {
     private employeeService: EmployeesService,
     private paymentService: PaymentsService,
     private loanFactory: LoanFactoryService,
+    private readonly installmentsService: InstallmentsService,
   ) {}
 
   async findOrReturnLoan(loanOrId: Loan | number): Promise<Loan> {
@@ -37,14 +42,26 @@ export class LoansService {
     return loan
   }
 
-  async create(loanDto: CreateLoanDto) {
-    const customer = await this.customerService.findOne(loanDto.customerId)
-    const employee = await this.employeeService.findOne(loanDto.employeeId)
-    const loan = this.loanFactory.createLoan(loanDto, customer, employee)
-    loan.paymentPeriod = { id: loanDto.paymentPeriodId } as PaymentPeriod
-    loan.loanState = { id: loanDto.loanStateId } as LoanState
+  async create(createDto: CreateLoanDto) {
+    const disbursementDay = createDto.startAt.getDate()
+    if (createDto.needsProrate && disbursementDay === createDto.paymentDay)
+      throw new Error(
+        'Disbursement day cannot be the same as payment day when prorating is needed.',
+      )
 
-    return this.repository.save(loan)
+    const customer = await this.customerService.findOne(createDto.customerId)
+    const employee = await this.employeeService.findOne(createDto.employeeId)
+    const loanDto = this.loanFactory.createLoan(createDto, customer, employee)
+    loanDto.paymentPeriod = { id: createDto.paymentPeriodId } as PaymentPeriod
+    loanDto.loanState = { id: createDto.loanStateId } as LoanState
+
+    const loan = await this.repository.save(loanDto)
+
+    if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED && createDto.needsProrate) {
+      await this.createProratedInstallment(loan, disbursementDay)
+    }
+
+    return loan
   }
 
   async findAll(params: FilterLoansDto, roleId: number, userId: number) {
@@ -110,5 +127,41 @@ export class LoansService {
 
   payOff(loanId: number, paymentDto: AddPaymentDto) {
     return this.paymentService.payOff(loanId, paymentDto)
+  }
+
+  async createProratedInstallment(loan: Loan, disbursementDay: number) {
+    const { paymentDay } = loan
+    const daysInMonth = monthDays(loan.startAt)
+    const prorateDays = this.calculateProrateDays(paymentDay, disbursementDay, daysInMonth)
+    const baseMonthDays = 30
+    let prorateInterest = 0
+    if (prorateDays >= 15) {
+      prorateInterest = loan.debt * (loan.interestRate / 100)
+    } else {
+      const prorateAmount = (loan.amount * loan.interestRate) / 100 / baseMonthDays
+      prorateInterest = prorateAmount * prorateDays
+    }
+    const { startsOn, deadline } = this.installmentsService.generateInstallmentDates(loan, null)
+    await this.installmentsService.create({
+      loanId: loan.id,
+      installmentStateId: INSTALLMENT_STATES.IN_PROGRESS, // Assuming 1 is the ID for 'pending' state
+      debt: loan.debt,
+      startsOn,
+      paymentDeadline: deadline,
+      days: prorateDays,
+      capital: 0,
+      interest: prorateInterest,
+      total: prorateInterest,
+      interestPaid: 0,
+    })
+  }
+
+  private calculateProrateDays(paymentDay: number, disbursementDay: number, daysInMonth: number) {
+    const prorateDays =
+      paymentDay > disbursementDay
+        ? paymentDay - disbursementDay
+        : daysInMonth - disbursementDay + paymentDay
+
+    return prorateDays
   }
 }

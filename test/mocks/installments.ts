@@ -33,5 +33,6 @@ export const mockInstallment: Installment = {
   updatedAt: new Date(),
   dailyInterest: [],
   payments: [],
-  commissionsInstallments: []
+  commissionsInstallments: [],
+  isProrate: false,
 }

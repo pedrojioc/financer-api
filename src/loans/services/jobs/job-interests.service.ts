@@ -51,37 +51,6 @@ export class JobInterestsService {
     return diffDays(today, deadline)
   }
 
-  generateInstallmentDates(
-    loan: Loan,
-    prevInstallment: Installment | null,
-  ): { startsOn: Date; deadline: Date } {
-    let startsOn: Date
-    let deadline: Date
-
-    if (!prevInstallment) {
-      const startDay = loan.startAt.getDate()
-      startsOn = addDay(loan.startAt, 1)
-      if (loan.paymentDay > startDay) {
-        // ? La fecha de pago es en el mismo mes que inicio el crédito
-        deadline = loan.startAt
-      } else {
-        deadline = addMonth(loan.startAt, 1)
-      }
-    } else {
-      startsOn = addDay(prevInstallment.paymentDeadline, 1)
-      deadline = addMonth(prevInstallment.paymentDeadline, 1)
-    }
-
-    const isOverflow = monthDays(deadline) < loan.paymentDay
-    if (isOverflow) {
-      deadline = monthEnd(deadline)
-    } else {
-      deadline.setDate(loan.paymentDay)
-    }
-
-    return { startsOn, deadline }
-  }
-
   private isTodayTheDeadline(deadline: Date): boolean {
     return isEqual(deadline, format(this.TODAY, this.DATE_FORMAT))
   }
@@ -114,7 +83,10 @@ export class JobInterestsService {
     installment: Installment,
     dailyInterest: number,
   ): CreateInstallmentDto {
-    const { startsOn, deadline } = this.generateInstallmentDates(loan, installment)
+    const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
+      loan,
+      installment,
+    )
     return {
       loanId: loan.id,
       installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
@@ -170,7 +142,10 @@ export class JobInterestsService {
     installment: Installment,
     installmentNumber: number,
   ): CreateInstallmentDto {
-    const { startsOn, deadline } = this.generateInstallmentDates(loan, installment)
+    const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
+      loan,
+      installment,
+    )
 
     const interestRate = loan.interestRate / 100
     const installmentAmount =
