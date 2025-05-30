@@ -6,7 +6,6 @@ import { Loan } from 'src/loans/entities/loan.entity'
 import { LOAN_STATES, LoanStateValueTypes } from 'src/loans/shared/constants'
 import { CreateLoanDto, UpdateLoanDto } from 'src/loans/dtos/loans.dto'
 import { LoanFactoryService } from './loan-factory.service'
-import { Installment } from 'src/loans/entities/installment.entity'
 
 @Injectable()
 export class LoanManagementService {

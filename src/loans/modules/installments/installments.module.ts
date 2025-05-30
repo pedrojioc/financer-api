@@ -11,10 +11,11 @@ import { DailyInterestModule } from '../daily-interest/daily-interest.module'
 import { InstallmentTypesController } from './installment-types.controller'
 import { InstallmentTypesService } from './installment-types.service'
 import { InstallmentType } from './entities/installment-type.entity'
+import { DeletedInstallment } from 'src/loans/entities/deleted-installment.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Installment, InstallmentType]),
+    TypeOrmModule.forFeature([Installment, InstallmentType, DeletedInstallment]),
     LoansManagementModule,
     InterestsModule,
     DailyInterestModule,

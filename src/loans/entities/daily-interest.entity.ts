@@ -16,13 +16,6 @@ export class DailyInterest {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => Installment, (installment) => installment.dailyInterest, {
-    nullable: false,
-    onDelete: 'RESTRICT',
-  })
-  @JoinColumn({ name: 'installment_id' })
-  installment: Installment
-
   @Column({ name: 'installment_id' })
   installmentId: number
 

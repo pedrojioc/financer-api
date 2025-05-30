@@ -5,7 +5,6 @@ import * as bcrypt from 'bcrypt'
 import * as argon2 from 'argon2'
 
 import { UsersService } from 'src/users/services/users.service'
-import { User } from 'src/users/entities/user.entity'
 import { AuthJwtPayload } from '../types/token.model'
 import refreshJwtConfig from '../config/refresh-jwt.config'
 import { CookieOptions } from 'express'

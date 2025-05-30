@@ -103,7 +103,6 @@ export class JobInterestsService {
 
   private async processFlexibleLoans(loan: Loan, today: Date): Promise<void> {
     const dailyInterestAmount = this.getDailyInterest(loan.debt, loan.interestRate)
-    let loanValues: UpdateLoanDto = { currentInterest: loan.currentInterest + dailyInterestAmount }
 
     let installment = await this.installmentService.getLastInstallment(loan.id)
     if (installment && isAfter(installment.paymentDeadline, today)) {
@@ -120,11 +119,11 @@ export class JobInterestsService {
         dailyInterestAmount,
       )
       installment = await this.installmentService.create(newInstallment)
-      loanValues.currentInstallmentNumber = loan.currentInstallmentNumber + 1
+      const newInstallmentNumber = loan.currentInstallmentNumber + 1
+      await this.loanManagementService.rawUpdate(loan.id, {
+        currentInstallmentNumber: newInstallmentNumber,
+      })
     }
-
-    // Update current interest on loans table
-    await this.loanManagementService.rawUpdate(loan.id, loanValues)
   }
 
   // -------------------------------
@@ -194,7 +193,6 @@ export class JobInterestsService {
       await this.installmentService.create(installmentData)
       await this.loanManagementService.rawUpdate(loan.id, {
         currentInstallmentNumber: installmentNumber,
-        currentInterest: loan.currentInterest + installmentData.interest,
       })
     }
   }

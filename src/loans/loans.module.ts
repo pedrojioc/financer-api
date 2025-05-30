@@ -32,6 +32,7 @@ import { DailyInterestModule } from './modules/daily-interest/daily-interest.mod
 import { InstallmentType } from './modules/installments/entities/installment-type.entity'
 import { RefinancingModule } from './modules/refinancing/refinancing.module'
 import { PaymentType } from './entities/payment-type.entity'
+import { DeletedInstallment } from './entities/deleted-installment.entity'
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { PaymentType } from './entities/payment-type.entity'
       PaymentMethod,
       InstallmentType,
       PaymentType,
+      DeletedInstallment,
     ]),
     CustomersModule,
     EmployeesModule,

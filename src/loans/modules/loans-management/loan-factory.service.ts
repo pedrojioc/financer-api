@@ -63,13 +63,10 @@ export class LoanFactoryService {
     commission: number,
     installmentsPaid: number,
   ) {
-    const newCurrentInterest = loan.currentInterest - interestPaid
-    const currentInterest = newCurrentInterest < 0 ? 0 : newCurrentInterest
     const totalInterestPaid = loan.totalInterestPaid + interestPaid
     const commissionsPaid = loan.commissionsPaid + commission
 
     const data: UpdateLoanDto = {
-      currentInterest,
       totalInterestPaid,
       daysLate,
       commissionsPaid,

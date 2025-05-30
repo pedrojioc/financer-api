@@ -11,6 +11,7 @@ import { FilterPaginatorDto } from 'src/lib/filter-paginator/dtos/filter-paginat
 import { FilterPaginator } from 'src/lib/filter-paginator'
 import { InstallmentState } from 'src/loans/entities/installment-state.entity'
 import { Loan } from 'src/loans/entities/loan.entity'
+import { DeletedInstallment } from 'src/loans/entities/deleted-installment.entity'
 
 @Injectable()
 export class InstallmentsService {
@@ -19,6 +20,8 @@ export class InstallmentsService {
 
   constructor(
     @InjectRepository(Installment) private repository: Repository<Installment>,
+    @InjectRepository(DeletedInstallment)
+    private readonly deletedRepo: Repository<DeletedInstallment>,
     private dataSource: DataSource,
   ) {}
 
@@ -36,6 +39,17 @@ export class InstallmentsService {
 
   update(id: number, installmentDto: UpdateInstallmentDto) {
     return this.repository.update(id, installmentDto)
+  }
+
+  async delete(id: number, userId: number) {
+    const installment = await this.findOne(id)
+    if (installment.installmentStateId === INSTALLMENT_STATES.PAID)
+      throw new Error('Cannot delete a paid installment')
+
+    console.log({ ...installment })
+    await this.deletedRepo.insert({ ...installment, userId, installmentId: installment.id })
+
+    return await this.repository.delete(id)
   }
 
   async findOne(id: number) {
