@@ -1,14 +1,20 @@
 import { NestFactory } from '@nestjs/core'
-import { AppModule } from 'src/app.module'
 import { JobInterestsService } from '../services/jobs/job-interests.service'
-import { LoansModule } from '../loans.module'
+import { JobInterestModule } from './modules/job-interest.module'
 
 async function bootstrap() {
-  const app = await NestFactory.createApplicationContext(AppModule)
-  const interestService = app.select(LoansModule).get(JobInterestsService, { strict: true })
+  try {
+    const app = await NestFactory.createApplicationContext(JobInterestModule)
+    const interestService = app.get(JobInterestsService)
 
-  await interestService.runDailyInterest()
-  await app.close()
+    console.log('Running daily interest job...')
+    await interestService.runDailyInterest()
+    console.log('Daily interest job completed successfully')
+    await app.close()
+  } catch (error) {
+    console.error('Error running daily interest job:', error)
+    process.exit(1)
+  }
 }
 
 bootstrap()

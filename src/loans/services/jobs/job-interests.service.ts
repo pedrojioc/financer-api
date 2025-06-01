@@ -18,13 +18,10 @@ import { INSTALLMENT_TYPES, LOAN_STATES, PAYMENT_PERIODS } from 'src/loans/share
 import { LoanManagementService } from 'src/loans/modules/loans-management/loans-management.service'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { InstallmentsService } from 'src/loans/modules/installments/installments.service'
-import { DailyInterestService } from 'src/loans/modules/daily-interest/daily-interest.service'
 import { Installment } from 'src/loans/entities/installment.entity'
 import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
 import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
 import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
-import { UpdateLoanDto } from 'src/loans/dtos/loans.dto'
-import { pre } from 'telegraf/typings/format'
 
 @Injectable()
 export class JobInterestsService {
@@ -34,7 +31,6 @@ export class JobInterestsService {
   constructor(
     @InjectRepository(Interest) private repository: Repository<Interest>,
     private installmentService: InstallmentsService,
-    private dailyInterestService: DailyInterestService,
     private loanManagementService: LoanManagementService,
   ) {}
 
@@ -201,7 +197,6 @@ export class JobInterestsService {
     const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
 
     for (const loan of loans) {
-      if (loan.id !== 65) continue
       if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED) {
         await this.processFixedLoans(loan, today)
       } else {
