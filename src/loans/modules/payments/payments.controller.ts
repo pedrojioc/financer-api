@@ -4,6 +4,7 @@ import { AddPaymentDto } from './dtos/add-payment.dto'
 import { NewCapitalPaymentDto } from './dtos/new-capital-payment.dto'
 import { FilterPaymentsDto } from './dtos/filter-payments.dto'
 import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
+import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
 
 @Controller('payments')
 export class PaymentsController {
@@ -12,6 +13,11 @@ export class PaymentsController {
   @Get()
   findAll(@Query() params: FilterPaymentsDto) {
     return this.paymentService.findAll(params)
+  }
+
+  @Get('loans/:id')
+  findAllByLoan(@Query() params: GetLoanPaymentsDto) {
+    return this.paymentService.findAllByLoan(params)
   }
 
   @Post()

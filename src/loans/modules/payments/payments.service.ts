@@ -25,6 +25,7 @@ import { FilterPaymentsDto } from './dtos/filter-payments.dto'
 import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
 import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from 'src/loans/shared/constants'
+import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
 
 @Injectable()
 export class PaymentsService {
@@ -44,7 +45,7 @@ export class PaymentsService {
       .select(
         'SUM(payments.capital) AS capital, SUM(payments.interest) AS interest, SUM(payments.total) AS total',
       )
-      .leftJoin('payments.installment', 'installment')
+      .leftJoin('payments.installments', 'installment')
       .leftJoin('installment.loan', 'loan')
       .leftJoin('loan.customer', 'customer')
       .leftJoin('loan.employee', 'employee')
@@ -61,8 +62,8 @@ export class PaymentsService {
     // ? Query base
     const payments = this.dataSource
       .createQueryBuilder(Payment, 'payments')
-      .leftJoinAndSelect('payments.installment', 'installment')
-      .leftJoinAndSelect('installment.loan', 'loan')
+      .leftJoinAndSelect('payments.installments', 'installment')
+      .leftJoinAndSelect('payments.loan', 'loan')
       .leftJoinAndSelect('loan.customer', 'customer')
       .leftJoinAndSelect('loan.employee', 'employee')
       .where('payments.is_received = :isReceived', { isReceived })
@@ -75,6 +76,26 @@ export class PaymentsService {
       .orderBy('payments.id', 'ASC')
 
     const [data, counter] = await payments.getManyAndCount()
+    return {
+      data,
+      total: counter,
+      currentPage: params.page,
+      itemsPerPage: params.itemsPerPage,
+    }
+  }
+
+  async findAllByLoan(params: GetLoanPaymentsDto) {
+    const query = this.dataSource
+      .createQueryBuilder(Payment, 'payments')
+      .leftJoinAndSelect('payments.installments', 'installment')
+      .leftJoinAndSelect('payments.paymentMethod', 'paymentMethod')
+      .where('payments.loanId = :loanId', { loanId: params.loanId })
+      .take(params.itemsPerPage)
+      .skip(params.itemsPerPage * (params.page - 1))
+      .orderBy('payments.id', 'DESC')
+
+    const [data, counter] = await query.getManyAndCount()
+
     return {
       data,
       total: counter,

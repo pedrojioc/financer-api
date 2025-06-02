@@ -98,7 +98,10 @@ export class LoansService {
       loans.where('loan_state_id = :loanState', { loanState: params.state })
     }
 
-    if (params.client) loans.andWhere('customer.name LIKE :client', { client: `${params.client}%` })
+    if (params.client) {
+      loans.andWhere('customer.name LIKE :client', { client: `${params.client}%` })
+      params.page = 1
+    }
 
     loans
       .take(params.itemsPerPage)
