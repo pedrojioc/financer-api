@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { format, monthDays } from '@formkit/tempo'
 
 import { Loan } from '../entities/loan.entity'
 import { CreateLoanDto, UpdateLoanDto } from '../dtos/loans.dto'
@@ -9,15 +10,17 @@ import { EmployeesService } from 'src/employees/services/employees.service'
 
 import { FilterLoansDto } from '../dtos/filter-loans.dto'
 import { LoanFactoryService } from '../modules/loans-management/loan-factory.service'
-import { PaymentsService } from '../modules/payments/payments.service'
-import { AddPaymentDto } from '../modules/payments/dtos/add-payment.dto'
 import { PaymentPeriod } from '../entities/payment-period.entity'
 import { LoanState } from '../entities/loan-state.entity'
 import { ROLE } from 'src/roles/constants/role-ids'
-import { monthDays } from '@formkit/tempo'
 import { InstallmentsService } from '../modules/installments/installments.service'
 import { INSTALLMENT_STATES } from '../constants/installments'
 import { INSTALLMENT_TYPES } from '../shared/constants'
+import { CreateContractDto } from '../dtos/create-contract.dto'
+import { toWords } from 'src/lib/numbers-to-words'
+import { calculateFixedInstallment } from 'src/lib/mathematical-operations'
+import { PdfService } from 'src/pdf/pdf.service'
+import { currencyFormat } from 'src/utils/number-format'
 
 @Injectable()
 export class LoansService {
@@ -25,9 +28,9 @@ export class LoansService {
     @InjectRepository(Loan) private repository: Repository<Loan>,
     private customerService: CustomersService,
     private employeeService: EmployeesService,
-    private paymentService: PaymentsService,
     private loanFactory: LoanFactoryService,
     private readonly installmentsService: InstallmentsService,
+    private readonly pdfService: PdfService,
   ) {}
 
   async findOrReturnLoan(loanOrId: Loan | number): Promise<Loan> {
@@ -128,10 +131,6 @@ export class LoansService {
     return this.repository.update(id, loanDto)
   }
 
-  payOff(loanId: number, paymentDto: AddPaymentDto) {
-    return this.paymentService.payOff(loanId, paymentDto)
-  }
-
   async createProratedInstallment(loan: Loan, disbursementDay: number) {
     const { paymentDay } = loan
     const daysInMonth = monthDays(loan.startAt)
@@ -157,6 +156,45 @@ export class LoansService {
       total: prorateInterest,
       interestPaid: 0,
     })
+  }
+
+  async generateContract(id: number) {
+    const loan = await this.findOne(id, ['customer'])
+    if (!loan) throw new NotFoundException()
+
+    const { installmentsNumber } = loan
+    const amountInWords = toWords(loan.amount)
+    const monthTerm = loan.installmentsNumber > 1 ? 'Meses' : 'Mes'
+    const legalInterestRate = 2
+    const legalInstallment = calculateFixedInstallment(
+      loan.amount,
+      legalInterestRate,
+      installmentsNumber,
+    )
+    const installment = await this.installmentsService.findFirstInstallment(loan.id)
+    let firstDeadline = installment.paymentDeadline
+    if (installment.isProrate) {
+      const { deadline } = this.installmentsService.generateInstallmentDates(loan, installment)
+      firstDeadline = deadline
+    }
+    const contractData: CreateContractDto = {
+      loanId: id,
+      today: format(new Date(), 'long', 'es'),
+      amount: currencyFormat(loan.amount),
+      amountInWords,
+      months: `${installmentsNumber} ${monthTerm}`,
+      startsOn: format(loan.startAt, 'long', 'es'),
+      legalInterestRate,
+      customer: loan.customer.name,
+      customerId: loan.customer.idNumber,
+      installmentsNumber,
+      legalInstallment: legalInstallment,
+      firstInstallmentDeadline: format(firstDeadline, 'long', 'es'),
+      lastInstallmentDeadline: format(loan.endAt, 'long', 'es'),
+    }
+
+    const pdfBuffer = await this.pdfService.generatePdf('contract', contractData)
+    return pdfBuffer
   }
 
   private calculateProrateDays(paymentDay: number, disbursementDay: number, daysInMonth: number) {

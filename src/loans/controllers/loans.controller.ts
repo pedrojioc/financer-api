@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common'
-import { Request } from 'express'
+import { Body, Controller, Get, Header, Param, Post, Query, Req, Res } from '@nestjs/common'
+import { Request, Response } from 'express'
 
 import { CreateLoanDto } from 'src/loans/dtos/loans.dto'
 import { LoansService } from 'src/loans/services/loans.service'
@@ -7,7 +7,6 @@ import { InterestsService } from '../modules/interests/interests.service'
 
 import { FilterPaginatorDto } from 'src/lib/filter-paginator/dtos/filter-paginator.dto'
 import { FilterLoansDto } from '../dtos/filter-loans.dto'
-import { AddPaymentDto } from '../modules/payments/dtos/add-payment.dto'
 import { InstallmentsService } from '../modules/installments/installments.service'
 import { AuthJwtPayload } from 'src/auth/types/token.model'
 
@@ -45,8 +44,11 @@ export class LoansController {
     return this.installmentsService.findAllByLoan(id, params)
   }
 
-  @Post(':id/pay-off')
-  payOff(@Param('id') id: number, @Body() data: AddPaymentDto) {
-    return this.loansService.payOff(id, data)
+  @Get('contracts/:id')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename=contrato.pdf')
+  async downloadContract(@Param('id') id: number, @Res() res: Response) {
+    const pdf = await this.loansService.generateContract(id)
+    res.send(pdf)
   }
 }

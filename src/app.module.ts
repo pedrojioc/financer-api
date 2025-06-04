@@ -18,6 +18,7 @@ import { NotificationsModule } from './notifications/notifications.module'
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module'
 import { ReportsModule } from './reports/reports.module';
 import { TasksModule } from './tasks/tasks.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { TasksModule } from './tasks/tasks.module';
     NotificationsModule,
     ReportsModule,
     TasksModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [AppService],

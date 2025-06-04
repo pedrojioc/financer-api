@@ -93,15 +93,6 @@ export class InstallmentsService {
     return await manager.save(installment)
   }
 
-  private async findOldestInstallment(manager: EntityManager, loanId: number) {
-    const installment = await manager.findOne(Installment, {
-      where: { loanId, installmentStateId: INSTALLMENT_STATES.OVERDUE },
-      order: { paymentDeadline: 'ASC' },
-    })
-
-    return installment
-  }
-
   async getCurrentInstallment(loanId: number, date: Date) {
     const installment = await this.repository
       .createQueryBuilder('installment')
@@ -223,5 +214,24 @@ export class InstallmentsService {
     }
 
     return { startsOn, deadline }
+  }
+
+  findFirstInstallment(loanId: number) {
+    return this.repository.findOne({
+      where: { loanId },
+      order: { id: 'asc' },
+    })
+  }
+
+  /*
+   ** Privates Methods
+   */
+  private async findOldestInstallment(manager: EntityManager, loanId: number) {
+    const installment = await manager.findOne(Installment, {
+      where: { loanId, installmentStateId: INSTALLMENT_STATES.OVERDUE },
+      order: { paymentDeadline: 'ASC' },
+    })
+
+    return installment
   }
 }

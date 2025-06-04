@@ -33,6 +33,7 @@ import { InstallmentType } from './modules/installments/entities/installment-typ
 import { RefinancingModule } from './modules/refinancing/refinancing.module'
 import { PaymentType } from './entities/payment-type.entity'
 import { DeletedInstallment } from './entities/deleted-installment.entity'
+import { PdfModule } from 'src/pdf/pdf.module'
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { DeletedInstallment } from './entities/deleted-installment.entity'
     LoanReportsModule,
     DailyInterestModule,
     RefinancingModule,
+    PdfModule,
   ],
   controllers: [LoansController, PaymentPeriodsController, LoanStatesController],
   providers: [

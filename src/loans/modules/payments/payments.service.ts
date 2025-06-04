@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common'
 
@@ -11,7 +10,6 @@ import { LoanManagementService } from '../loans-management/loans-management.serv
 import { AddPaymentDto } from './dtos/add-payment.dto'
 
 import { InstallmentFactoryService } from '../installments/installment-factory.service'
-import { PayOffDto } from 'src/loans/dtos/pay-off.dto'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
 import { CommissionsService } from 'src/employees/services/commissions.service'
@@ -291,18 +289,6 @@ export class PaymentsService {
     )
 
     return paymentRs
-  }
-
-  async payOff(loanId: number, addPaymentDto: PayOffDto) {
-    const loan = await this.loanManagementService.findOne(loanId, ['employee'])
-
-    const installments = await this.installmentService.findUnpaidInstallments(loanId)
-    if (installments.length === 0) throw new NotFoundException('Cuotas no encontrados')
-
-    for (const installment of installments) {
-      // const installmentUpdate = this.installmentFactoryService.update(installment, addPaymentDto)
-      // await this.processInstallmentPayment(installment, installmentUpdate, loan)
-    }
   }
 
   async markAsReceived(markDto: MarkPaymentAsReceived) {
