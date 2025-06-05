@@ -1,6 +1,17 @@
-import { IsDateString, IsNotEmpty, IsNumberString, IsPositive, IsString } from 'class-validator'
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator'
 
 export class CreateCustomerDto {
+  @IsPositive()
+  @IsNotEmpty()
+  genderId: number
+
   @IsPositive()
   @IsNotEmpty()
   financialActivityId: number
@@ -21,6 +32,22 @@ export class CreateCustomerDto {
   phoneNumber: string
 
   @IsDateString({ strict: false, strictSeparator: false })
-  @IsNotEmpty()
-  birthdate: Date
+  @IsOptional()
+  birthdate?: Date
+
+  @IsString()
+  @IsOptional()
+  personalReference?: string
+
+  @IsNumberString()
+  @IsOptional()
+  personalReferencePhone?: string
+
+  @IsString()
+  @IsOptional()
+  workReference?: string
+
+  @IsNumberString()
+  @IsOptional()
+  workReferencePhone?: string
 }

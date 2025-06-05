@@ -8,6 +8,7 @@ import { Customer } from '../entities/customer.entity'
 import { FinancialActivityService } from './financial-activity.service'
 import { FilterPaginatorDto } from 'src/lib/filter-paginator/dtos/filter-paginator.dto'
 import { FilterPaginator } from 'src/lib/filter-paginator'
+import { Gender } from 'src/genders/entities/gender.entity'
 
 @Injectable()
 export class CustomersService {
@@ -20,6 +21,7 @@ export class CustomersService {
     const newCustomer = this.repository.create(userPayload)
     const activity = await this.activityService.findOne(userPayload.financialActivityId)
     newCustomer.financialActivity = activity
+    newCustomer.gender = { id: userPayload.genderId } as Gender
     return this.repository.save(newCustomer)
   }
 

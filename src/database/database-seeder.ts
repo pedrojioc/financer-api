@@ -26,6 +26,7 @@ export class DatabaseSeeder {
       address: 'Calle 12',
       phoneNumber: '34234232',
       birthdate: new Date('1995-05-03'),
+      genderId: 1,
     }
     return await this.dataSource.getRepository(Customer).insert(customerData)
   }

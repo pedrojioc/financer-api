@@ -16,9 +16,10 @@ import config from './config'
 import { PaymentMethodsModule } from './payment-methods/payment-methods.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module'
-import { ReportsModule } from './reports/reports.module';
-import { TasksModule } from './tasks/tasks.module';
-import { PdfModule } from './pdf/pdf.module';
+import { ReportsModule } from './reports/reports.module'
+import { TasksModule } from './tasks/tasks.module'
+import { PdfModule } from './pdf/pdf.module'
+import { GendersModule } from './genders/genders.module'
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PdfModule } from './pdf/pdf.module';
     ReportsModule,
     TasksModule,
     PdfModule,
+    GendersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
