@@ -92,7 +92,7 @@ export class AuthService {
     return {
       httpOnly: true,
       secure: isProductionMode ? true : false,
-      domain: this.configService.get('CONSUMER_HOST'),
+      domain: this.configService.get('COOKIE_ROOT_DOMAIN'),
       sameSite: isProductionMode ? 'lax' : 'strict',
     }
   }
