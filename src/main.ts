@@ -4,6 +4,7 @@ import { getBotToken } from 'nestjs-telegraf'
 import * as cookieParser from 'cookie-parser'
 
 import { AppModule } from './app.module'
+import { registerHandlebarsHelpers } from './config'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -20,6 +21,7 @@ async function bootstrap() {
   app.enableCors({ origin: process.env.CONSUMER_URL, credentials: true })
 
   app.use(cookieParser())
+  registerHandlebarsHelpers()
 
   const bot = app.get(getBotToken())
   app.use(bot.webhookCallback(process.env.TELEGRAM_HOOK_PATH))

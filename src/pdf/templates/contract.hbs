@@ -1,132 +1,194 @@
-<html lang='es'>
-  <head>
-    <meta charset='UTF-8' />
-    <style>
-      body { font-family: Arial, Helvetica, sans-serif; font-size: 16px; } article { max-width:
-      75ch; margin: 0 auto; line-height: 1.45; text-align: justify; } #contract-header {
-      margin-bottom: 1lh; } #contract-header p, #signatures p { margin-block: 0px; } p {
-      margin-block: 1lh; } #title { margin-top: 50px; margin-bottom: 50px; text-align: center; }
-      .bold { font-weight: bolder; } #signatures { margin-top: 150px; text-align: left; }
-      #signatures hr { width: 380px; margin: 20px 0; border: 0; border-top: 1px solid black; }
-      #creditor, #debtor { margin-bottom: 60px; } .no-color { color: rgba(255, 255, 255, 0); }
-      #debtor { display: flex; } #debtor-signature { flex: 1; } #fingerprint { width: 105px; height:
-      110px; border: 1px solid #cccccc; }
-    </style>
-  </head>
-  <body>
-    <article>
-      <header
-        style='display: flex; flex-direction: column; justify-content: space-between; align-items: center;'
-      >
-        <span style='width: 200px; height: auto;'>
-          <img
-            src='https://www.grupoavanza.co/images/logos/financer-logo-black.svg'
-            alt='Logo'
-            style='width: inherit;'
-          />
-        </span>
-        <strong style='color: #bfbfbf;'>NIT 901.930.637</strong>
-      </header>
-      <section id='title'>
-        <strong>PAGARE No. {{loanId}}</strong>
-      </section>
-      <header id='contract-header'>
-        <p><span class='bold'>Lugar y fecha de firma: </span> Plato Magdalena, {{today}}</p>
-        <p><span class='bold'>Valor: </span> {{amount}} {{amountInWords}} MTE</p>
-        <p><span class='bold'>Plazo: </span> {{months}} a partir de {{startsOn}}</p>
-        <p>
-          <span class='bold'>Intereses corrientes durante el plazo: </span>
-          <span class='no-color'>{{legalInterestRate}}%</span>
-        </p>
-        <p><span class='bold'>Intereses de mora: </span> 2%</p>
-        <p><span class='bold'>Acreedor: </span>FINANCER S.A.S</p>
-        <p><span class='bold'>Lugar donde se efectuará el pago: </span>Plato Magdalena</p>
-        <p><span class='bold'>Deudor: </span>{{customer}}</p>
-      </header>
-      <hr />
-      <p>
-        El documento a título de pagaré que por este escrito se constituye entre las partes
-        firmantes, se rige por lo que a continuación se declara:
-      </p>
+<html lang="es">
 
-      <p>
-        <span class='bold'>PRIMERO. - OBJETO:</span>
-        Que por virtud del presente título valor pagaré incondicionalmente a la orden de
-        <strong>FINANCER S.A.S</strong>, con
-        <strong>NIT 901.930.637</strong>, o a quien represente sus derechos, en la ciudad y
-        dirección indicados, y en las fechas de amortización por cuotas señaladas en la cláusula
-        tercera de este pagaré, la suma de valor en letras del dinero que se compromete a pagar
-        <strong>({{amount}}), {{amountInWords}} MTE</strong>, más los intereses señalados en la
-        cláusula segunda de este documento.
-      </p>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+    }
 
-      <p>
-        <span class='bold'>SEGUNDA. - INTERESES:</span>
-        Que sobre la suma debida se reconocerán intereses corrientes a una tasa nominal mensual del
-        <span class='no-color'>{{legalInterestRate}}%</span>. Sin embargo, en caso de mora en el
-        cumplimiento de las cuotas señaladas en la cláusula tercera de este título, pagaré intereses
-        de mora a una tasa nominal mensual del 2% mensual sobre el saldo de capital que llegue a
-        estar en mora.
-      </p>
+    article {
+      max-width: 75ch;
+      margin: 0 auto;
+      line-height: 1.45;
+      text-align: justify;
+    }
 
-      <p>
-        <span class='bold'>TERCERA. - PLAZO:</span>
-        Que pagaré el capital indicado en la cláusula primera de este pagaré mediante
-        <strong>({{installmentsNumber}})</strong>
-        cuotas iguales, mensuales y sucesivas, cada una de ellas por un monto de
-        <span class='no-color'>{{legalInstallment}}</span>, salvo el deudor incurra en mora, pues en
-        dicho caso, será el valor de la cuota más los intereses de mora correspondientes. La primera
-        de estas cuotas se pagará el día
-        {{firstInstallmentDeadline}}
-        y de allí en adelante en forma sucesiva mensual hasta el día
-        {{lastInstallmentDeadline}}.
-      </p>
+    #contract-header {
+      margin-bottom: 1lh;
+    }
 
-      <p>
-        <strong>CUARTA. - GARANTÍA DE CUMPLIMIENTO:</strong>
-        El señor
-        <strong>{{customer}}</strong>, autoriza con la firma del presente documento pagaré; la
-        titularidad del derecho de retención a nombre del acreedor
-        <strong>FINANCER S.A.S</strong>, sobre todos los bienes muebles de los cuales es
-        propietario, y cualquier mueble de valor que adquiera en la vigencia de este acuerdo. Bienes
-        que autoriza, serán tomados en posesión en caso de incumplimiento de máximo 4 cuotas de las
-        aquí pactadas.
-      </p>
+    #contract-header p,
+    #signatures p {
+      margin-block: 0px;
+    }
 
-      <p>
-        <strong>QUINTA. - CLAUSULA ACELERATORIA:</strong>
-        El tenedor del presente pagaré podrá declarar vencidos la totalidad de los plazos de esta
-        obligación o de las cuotas que constituyan el saldo de lo debido y exigir su pago inmediato
-        ya sea judicial o extrajudicialmente, cuando el deudor entre en mora o incumpla una
-        cualquiera de las obligaciones derivadas del presente documento.
-      </p>
+    p {
+      margin-block: 1lh;
+    }
 
+    #title {
+      margin-top: 50px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .bold {
+      font-weight: bolder;
+    }
+
+    #signatures {
+      margin-top: 150px;
+      text-align: left;
+    }
+
+    #signatures hr {
+      width: 380px;
+      margin: 20px 0;
+      border: 0;
+      border-top: 1px solid black;
+    }
+
+    #creditor {
+      margin-bottom: 100px;
+    }
+
+    #debtor {
+      margin-bottom: 50px;
+    }
+
+    .no-color {
+      color: rgba(255, 255, 255, 0);
+    }
+
+    #debtor {
+      display: flex;
+    }
+
+    #debtor-signature {
+      flex: 1;
+    }
+
+    #fingerprint {
+      width: 105px;
+      height: 110px;
+      border: 1px solid #cccccc;
+    }
+  </style>
+</head>
+
+<body>
+  <article>
+    <header style="
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: start;
+        ">
+      <span style="width: 200px; height: auto">
+        <img src="https://www.grupoavanza.co/images/logos/financer-logo-black.svg" alt="Logo" style="width: inherit" />
+      </span>
+      <strong style="color: #8c8c8c">NIT 901.930.637</strong>
+    </header>
+    <section id="title">
+      <strong>PAGARE No. {{loanId}}</strong>
+    </section>
+    <header id="contract-header">
+      <p><span class="bold">Lugar y fecha de firma: </span> Plato Magdalena, {{today}}</p>
+      <p><span class="bold">Valor: </span> {{amount}} {{amountInWords}} MTE</p>
+      <p><span class="bold">Plazo: </span> {{months}} a partir de {{startsOn}}</p>
       <p>
-        En Constancia de lo anterior, se suscribe este documento en la ciudad de Plato Magdalena.
+        <span class="bold">Intereses corrientes durante el plazo: </span>
+        <span class="no-color">{{legalInterestRate}}%</span>
       </p>
-      <section id='signatures'>
-        <div id='creditor'>
+      <p><span class="bold">Intereses de mora: </span> 2%</p>
+      <p><span class="bold">Acreedor: </span>FINANCER S.A.S</p>
+      <p><span class="bold">Lugar donde se efectuará el pago: </span>Plato Magdalena</p>
+      <p><span class="bold">Deudor: </span>{{customer}}</p>
+    </header>
+    <hr />
+    <p>
+      El documento a título de pagaré que por este escrito se constituye entre las partes
+      firmantes, se rige por lo que a continuación se declara:
+    </p>
+
+    <p>
+      <span class="bold">PRIMERO. - OBJETO:</span>
+      Que por virtud del presente título valor pagaré incondicionalmente a la orden de
+      <strong>FINANCER S.A.S</strong>, con <strong>NIT 901.930.637</strong>, o a quien represente
+      sus derechos, en la ciudad y dirección indicados, y en las fechas de amortización por cuotas
+      señaladas en la cláusula tercera de este pagaré, la suma de valor en letras del dinero que
+      se compromete a pagar <strong>({{amount}}), {{amountInWords}} MTE</strong>, más los
+      intereses señalados en la cláusula segunda de este documento.
+    </p>
+
+    <p>
+      <span class="bold">SEGUNDA. - INTERESES:</span>
+      Que sobre la suma debida se reconocerán intereses corrientes a una tasa nominal mensual del
+      <span class="no-color">{{legalInterestRate}}%</span>. Sin embargo, en caso de mora en el
+      cumplimiento de las cuotas señaladas en la cláusula tercera de este título, pagaré intereses
+      de mora a una tasa nominal mensual del 2% mensual sobre el saldo de capital que llegue a
+      estar en mora.
+    </p>
+
+    <p>
+      <span class="bold">TERCERA. - PLAZO:</span>
+      Que pagaré el capital indicado en la cláusula primera de este pagaré mediante
+      <strong>({{installmentsNumber}})</strong>
+      cuotas iguales, mensuales y sucesivas, cada una de ellas por un monto de
+      <span class="no-color">{{legalInstallment}}</span>, salvo el deudor incurra en mora, pues en
+      dicho caso, será el valor de la cuota más los intereses de mora correspondientes. La primera
+      de estas cuotas se pagará el día {{firstInstallmentDeadline}} y de allí en adelante en forma
+      sucesiva mensual hasta el día {{lastInstallmentDeadline}}.
+    </p>
+
+    <p>
+      <strong>CUARTA. - GARANTÍA DE CUMPLIMIENTO:</strong>
+      {{#if (isEqual genderId 1)}}
+      <span>El señor </span>
+      {{else}}
+      <span>La señora </span>
+      {{/if}}
+
+      <strong>{{customer}}</strong>, autoriza con la firma del presente documento pagaré; la
+      titularidad del derecho de retención a nombre del acreedor <strong>FINANCER S.A.S</strong>,
+      sobre todos los bienes muebles de los cuales es propietario, y cualquier mueble de valor que
+      adquiera en la vigencia de este acuerdo. Bienes que autoriza, serán tomados en posesión en
+      caso de incumplimiento de máximo 4 cuotas de las aquí pactadas.
+    </p>
+
+    <p>
+      <strong>QUINTA. - CLAUSULA ACELERATORIA:</strong>
+      El tenedor del presente pagaré podrá declarar vencidos la totalidad de los plazos de esta
+      obligación o de las cuotas que constituyan el saldo de lo debido y exigir su pago inmediato
+      ya sea judicial o extrajudicialmente, cuando el deudor entre en mora o incumpla una
+      cualquiera de las obligaciones derivadas del presente documento.
+    </p>
+
+    <p>
+      En Constancia de lo anterior, se suscribe este documento en la ciudad de Plato Magdalena.
+    </p>
+    <section id="signatures">
+      <div id="creditor">
+        <p><strong>Beneficiario</strong></p>
+        <p>FINANCER S.A.S</p>
+      </div>
+
+      <div id="debtor">
+        <div id="debtor-signature">
           <hr />
-          <p>FINANCER S.A.S</p>
-          <p>NIT 901.930.637</p>
-          <p>Representante legal</p>
-          <p>Pedro José Jiménez Ochoa</p>
-          <p>Acreedor</p>
+          <p><strong>Otorgante</strong></p>
+          <p>{{customer}}</p>
+          <p>CC {{customerId}}</p>
         </div>
+        <div style="text-align: center">
+          <div id="fingerprint"></div>
+          <small>Huella</small>
+        </div>
+      </div>
+    </section>
+  </article>
+</body>
 
-        <div id='debtor'>
-          <div id='debtor-signature'>
-            <hr />
-            <p>{{customer}}</p>
-            <p>CC {{customerId}}</p>
-            <p>Acreedor</p>
-          </div>
-          <div style='text-align: center'>
-            <div id='fingerprint'></div>
-            <small>Huella</small>
-          </div>
-        </div>
-      </section>
-    </article>
-  </body>
 </html>

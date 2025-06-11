@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config'
+import * as handlebars from 'handlebars'
 
 export default registerAs('config', () => ({
   mysql: {
@@ -16,3 +17,20 @@ export default registerAs('config', () => ({
   KEY: 'asd',
   whatsAppToken: process.env.WHATSAPP_TOKEN,
 }))
+
+export function registerHandlebarsHelpers() {
+  handlebars.registerHelper(
+    'formatDate',
+    (date: Date, format: 'full' | 'long' | 'medium' | 'short') => {
+      return new Intl.DateTimeFormat('en-US', { dateStyle: format }).format(date)
+    },
+  )
+
+  handlebars.registerHelper('isEqual', (arg1: any, arg2: any) => {
+    return arg1 === arg2
+  })
+
+  handlebars.registerHelper('toUpperCase', (str: string) => {
+    return str.toUpperCase()
+  })
+}

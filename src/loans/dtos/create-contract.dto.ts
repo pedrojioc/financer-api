@@ -1,5 +1,6 @@
 export interface CreateContractDto {
   loanId: number
+  genderId: number
   today: string
   amount: string
   amountInWords: string

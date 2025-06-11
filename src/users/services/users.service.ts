@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { Repository } from 'typeorm'
+import { FindOneOptions, Repository } from 'typeorm'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as bcrypt from 'bcrypt'
 
@@ -29,8 +29,8 @@ export class UsersService {
     return this.repository.save(newUser)
   }
 
-  findAll() {
-    return this.repository.find()
+  findAll(findOptions?: FindOneOptions<User>) {
+    return this.repository.find(findOptions || {})
   }
 
   async findOne(id: number, relations: string[] = []) {

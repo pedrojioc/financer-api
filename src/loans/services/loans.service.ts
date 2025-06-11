@@ -187,6 +187,7 @@ export class LoansService {
       legalInterestRate,
       customer: loan.customer.name,
       customerId: loan.customer.idNumber,
+      genderId: loan.customer.genderId,
       installmentsNumber,
       legalInstallment: legalInstallment,
       firstInstallmentDeadline: format(firstDeadline, 'long', 'es'),
