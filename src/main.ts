@@ -23,7 +23,16 @@ async function bootstrap() {
   const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || []
   const origins = allowedOrigins.map((origin) => origin.trim())
 
-  app.enableCors({ origin: origins, credentials: true })
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || origins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`))
+      }
+    },
+    credentials: true,
+  })
 
   app.use(cookieParser())
   registerHandlebarsHelpers()
