@@ -18,7 +18,12 @@ async function bootstrap() {
     }),
   )
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector))) // Activate serializer
-  app.enableCors({ origin: process.env.CONSUMER_URL, credentials: true })
+
+  // Cors configuration
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || []
+  const origins = allowedOrigins.map((origin) => origin.trim())
+
+  app.enableCors({ origin: origins, credentials: true })
 
   app.use(cookieParser())
   registerHandlebarsHelpers()
