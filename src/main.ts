@@ -12,16 +12,10 @@ async function bootstrap() {
   // Cors configuration
   const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || []
   const origins = allowedOrigins.map((origin) => origin.trim())
-  console.log('Allowed CORS origins:', origins)
+
   app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || origins.includes(origin)) {
-        callback(null, true)
-      } else {
-        callback(new Error(`Origin ${origin} not allowed by CORS`))
-      }
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: origins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'],
     credentials: true,
   })
 
