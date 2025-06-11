@@ -8,6 +8,23 @@ import { registerHandlebarsHelpers } from './config'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  // Cors configuration
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || []
+  const origins = allowedOrigins.map((origin) => origin.trim())
+  console.log('Allowed CORS origins:', origins)
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || origins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`))
+      }
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  })
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -18,21 +35,6 @@ async function bootstrap() {
     }),
   )
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector))) // Activate serializer
-
-  // Cors configuration
-  const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || []
-  const origins = allowedOrigins.map((origin) => origin.trim())
-
-  app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin || origins.includes(origin)) {
-        callback(null, true)
-      } else {
-        callback(new Error(`Origin ${origin} not allowed by CORS`))
-      }
-    },
-    credentials: true,
-  })
 
   app.use(cookieParser())
   registerHandlebarsHelpers()
