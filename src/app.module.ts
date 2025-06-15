@@ -20,6 +20,7 @@ import { ReportsModule } from './reports/reports.module'
 import { TasksModule } from './tasks/tasks.module'
 import { PdfModule } from './pdf/pdf.module'
 import { GendersModule } from './genders/genders.module'
+import { FinancialAccountingModule } from './financial-accounting/financial-accounting.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { GendersModule } from './genders/genders.module'
     TasksModule,
     PdfModule,
     GendersModule,
+    FinancialAccountingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

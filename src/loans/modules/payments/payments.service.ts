@@ -24,6 +24,9 @@ import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
 import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from 'src/loans/shared/constants'
 import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
+import { WalletService } from 'src/financial-accounting/services/wallet.service'
+import { WALLET_TYPES } from 'src/financial-accounting/constants/wallet-constants'
+import { TRANSACTION_TYPES } from 'src/financial-accounting/constants/transaction-constants'
 
 @Injectable()
 export class PaymentsService {
@@ -33,6 +36,7 @@ export class PaymentsService {
     private installmentFactoryService: InstallmentFactoryService,
     private commissionService: CommissionsService,
     private employeeService: EmployeesService,
+    private walletService: WalletService,
     private dataSource: DataSource,
   ) {}
 
@@ -216,6 +220,7 @@ export class PaymentsService {
         paymentTypeId: PAYMENT_TYPES.NORMAL_INSTALLMENT,
       })
 
+      // ? Crear la comisión
       if (totalCommission > 0) {
         const commissionDto: CreateCommissionDto = {
           employeeId: loan.employeeId,
@@ -226,9 +231,25 @@ export class PaymentsService {
           isPaid: false,
         }
 
-        // ? Crear la comisión
         await this.commissionService.transactionalCreate(manager, commissionDto, commissionDetails)
         await this.employeeService.transactionalUpdateBalance(manager, employeeId, totalCommission)
+      }
+
+      // ? Realizar la transacción
+      if (totalToCapital > 0) {
+        const TYPE = 'inflow'
+        await this.walletService.transaction(
+          TYPE,
+          {
+            walletId: WALLET_TYPES.CAPITAL,
+            amount: totalToCapital,
+            description: `Pago a capital del préstamo ${loan.id}`,
+            loanId: loan.id,
+            transactionTypeId: TRANSACTION_TYPES.PAYMENT,
+            date: paymentDto.paymentDate,
+          },
+          manager,
+        )
       }
 
       // ? Calcular los días de atraso
@@ -277,7 +298,22 @@ export class PaymentsService {
     const interestPaid = 0
     const daysLate = 0
     const commission = 0
-    const countAsPaid = false
+    const installmentsPaid = 1
+
+    // ? Realizar la transacción
+    await this.walletService.transaction(
+      'inflow',
+      {
+        walletId: WALLET_TYPES.CAPITAL,
+        amount: capital,
+        description: `Pago a capital del préstamo ${loan.id}`,
+        loanId: loan.id,
+        transactionTypeId: TRANSACTION_TYPES.PAYMENT,
+        date: paymentDto.paymentDate,
+      },
+      manager,
+    )
+
     await this.loanManagementService.updateLoanAfterPayment(
       manager,
       loan,
@@ -285,7 +321,7 @@ export class PaymentsService {
       capital,
       daysLate,
       commission,
-      1,
+      installmentsPaid,
     )
 
     return paymentRs

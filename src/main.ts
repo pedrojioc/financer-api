@@ -34,8 +34,11 @@ async function bootstrap() {
   app.use(cookieParser())
   registerHandlebarsHelpers()
 
-  const bot = app.get(getBotToken())
-  app.use(bot.webhookCallback(process.env.TELEGRAM_HOOK_PATH))
+  // Only set up webhook callback in production with valid domain
+  if (process.env.NODE_ENV === 'production' && process.env.APP_DOMAIN) {
+    const bot = app.get(getBotToken())
+    app.use(bot.webhookCallback(process.env.TELEGRAM_HOOK_PATH))
+  }
 
   await app.listen(3000)
 }

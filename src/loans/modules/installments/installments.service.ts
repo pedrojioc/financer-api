@@ -25,10 +25,14 @@ export class InstallmentsService {
     private dataSource: DataSource,
   ) {}
 
-  create(installmentDto: CreateInstallmentDto) {
-    const installment = this.repository.create(installmentDto)
-    // this.dataSource.createQueryBuilder().insert().into(Installment).values(installmentDto)
-    return this.repository.save(installment)
+  create(installmentDto: CreateInstallmentDto, manager?: EntityManager) {
+    if (manager) {
+      const entity = manager.create(Installment, installmentDto)
+      return manager.save(entity)
+    } else {
+      const entity = this.repository.create(installmentDto)
+      return this.repository.save(entity)
+    }
   }
 
   findAll(where: FindOptionsWhere<Installment> = {}) {

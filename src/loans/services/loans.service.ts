@@ -1,17 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { DataSource, EntityManager, Repository } from 'typeorm'
 import { format, monthDays } from '@formkit/tempo'
 
 import { Loan } from '../entities/loan.entity'
 import { CreateLoanDto, UpdateLoanDto } from '../dtos/loans.dto'
-import { CustomersService } from 'src/customers/services/customers.service'
-import { EmployeesService } from 'src/employees/services/employees.service'
-
+import { LoanManagementService } from '../modules/loans-management/loans-management.service'
 import { FilterLoansDto } from '../dtos/filter-loans.dto'
-import { LoanFactoryService } from '../modules/loans-management/loan-factory.service'
-import { PaymentPeriod } from '../entities/payment-period.entity'
-import { LoanState } from '../entities/loan-state.entity'
 import { ROLE } from 'src/roles/constants/role-ids'
 import { InstallmentsService } from '../modules/installments/installments.service'
 import { INSTALLMENT_STATES } from '../constants/installments'
@@ -21,14 +16,18 @@ import { toWords } from 'src/lib/numbers-to-words'
 import { calculateFixedInstallment } from 'src/lib/mathematical-operations'
 import { PdfService } from 'src/pdf/pdf.service'
 import { currencyFormat } from 'src/utils/number-format'
+import { WalletService } from 'src/financial-accounting/services/wallet.service'
+import { WALLET_TYPES } from 'src/financial-accounting/constants/wallet-constants'
+import { TRANSACTION_TYPES } from 'src/financial-accounting/constants/transaction-constants'
+import { Transactional } from 'src/shared/transactional/transactional.decorator'
 
 @Injectable()
 export class LoansService {
   constructor(
     @InjectRepository(Loan) private repository: Repository<Loan>,
-    private customerService: CustomersService,
-    private employeeService: EmployeesService,
-    private loanFactory: LoanFactoryService,
+    private dataSource: DataSource,
+    private loanManagementService: LoanManagementService,
+    private readonly walletService: WalletService,
     private readonly installmentsService: InstallmentsService,
     private readonly pdfService: PdfService,
   ) {}
@@ -45,23 +44,19 @@ export class LoansService {
     return loan
   }
 
-  async create(createDto: CreateLoanDto) {
+  @Transactional()
+  async create(createDto: CreateLoanDto, manager?: EntityManager) {
     const disbursementDay = createDto.startAt.getDate()
     if (createDto.needsProrate && disbursementDay === createDto.paymentDay)
       throw new Error(
         'Disbursement day cannot be the same as payment day when prorating is needed.',
       )
 
-    const customer = await this.customerService.findOne(createDto.customerId)
-    const employee = await this.employeeService.findOne(createDto.employeeId)
-    const loanDto = this.loanFactory.createLoan(createDto, customer, employee)
-    loanDto.paymentPeriod = { id: createDto.paymentPeriodId } as PaymentPeriod
-    loanDto.loanState = { id: createDto.loanStateId } as LoanState
-
-    const loan = await this.repository.save(loanDto)
+    const loan = await this.loanManagementService.create(createDto, manager)
+    await this.makeTransaction(loan.id, WALLET_TYPES.CAPITAL, createDto.amount, manager)
 
     if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED && createDto.needsProrate) {
-      await this.createProratedInstallment(loan, disbursementDay)
+      await this.createProratedInstallment(loan, disbursementDay, manager)
     }
 
     return loan
@@ -131,7 +126,7 @@ export class LoansService {
     return this.repository.update(id, loanDto)
   }
 
-  async createProratedInstallment(loan: Loan, disbursementDay: number) {
+  async createProratedInstallment(loan: Loan, disbursementDay: number, manager?: EntityManager) {
     const { paymentDay } = loan
     const daysInMonth = monthDays(loan.startAt)
     const prorateDays = this.calculateProrateDays(paymentDay, disbursementDay, daysInMonth)
@@ -144,18 +139,21 @@ export class LoansService {
       prorateInterest = prorateAmount * prorateDays
     }
     const { startsOn, deadline } = this.installmentsService.generateInstallmentDates(loan, null)
-    await this.installmentsService.create({
-      loanId: loan.id,
-      installmentStateId: INSTALLMENT_STATES.IN_PROGRESS, // Assuming 1 is the ID for 'pending' state
-      debt: loan.debt,
-      startsOn,
-      paymentDeadline: deadline,
-      days: prorateDays,
-      capital: 0,
-      interest: prorateInterest,
-      total: prorateInterest,
-      interestPaid: 0,
-    })
+    await this.installmentsService.create(
+      {
+        loanId: loan.id,
+        installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
+        debt: loan.debt,
+        startsOn,
+        paymentDeadline: deadline,
+        days: prorateDays,
+        capital: 0,
+        interest: prorateInterest,
+        total: prorateInterest,
+        interestPaid: 0,
+      },
+      manager,
+    )
   }
 
   async generateContract(id: number) {
@@ -205,5 +203,25 @@ export class LoansService {
         : daysInMonth - disbursementDay + paymentDay
 
     return prorateDays
+  }
+
+  private async makeTransaction(
+    loanId: number,
+    walletId: number,
+    amount: number,
+    manager?: EntityManager,
+  ) {
+    await this.walletService.transaction(
+      'outflow',
+      {
+        amount,
+        walletId,
+        loanId,
+        transactionTypeId: TRANSACTION_TYPES.DISBURSEMENT,
+        description: 'Desembolso',
+        date: new Date(),
+      },
+      manager,
+    )
   }
 }

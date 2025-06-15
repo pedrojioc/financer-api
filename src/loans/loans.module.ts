@@ -34,6 +34,7 @@ import { RefinancingModule } from './modules/refinancing/refinancing.module'
 import { PaymentType } from './entities/payment-type.entity'
 import { DeletedInstallment } from './entities/deleted-installment.entity'
 import { PdfModule } from 'src/pdf/pdf.module'
+import { FinancialAccountingModule } from 'src/financial-accounting/financial-accounting.module'
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { PdfModule } from 'src/pdf/pdf.module'
     DailyInterestModule,
     RefinancingModule,
     PdfModule,
+    FinancialAccountingModule,
   ],
   controllers: [LoansController, PaymentPeriodsController, LoanStatesController],
   providers: [

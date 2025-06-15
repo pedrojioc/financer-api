@@ -7,6 +7,7 @@ import { PaymentsController } from './payments.controller'
 import { EmployeesModule } from 'src/employees/employees.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Payment } from 'src/loans/entities/payments.entity'
+import { FinancialAccountingModule } from 'src/financial-accounting/financial-accounting.module'
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { Payment } from 'src/loans/entities/payments.entity'
     InterestsModule,
     InstallmentsModule,
     EmployeesModule,
+    FinancialAccountingModule,
   ],
   providers: [PaymentsService],
   exports: [PaymentsService],
