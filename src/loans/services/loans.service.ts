@@ -170,9 +170,17 @@ export class LoansService {
       installmentsNumber,
     )
     const installment = await this.installmentsService.findFirstInstallment(loan.id)
-    let firstDeadline = installment.paymentDeadline
-    if (installment.isProrate) {
-      const { deadline } = this.installmentsService.generateInstallmentDates(loan, installment)
+    let firstDeadline: Date
+    
+    if (installment) {
+      firstDeadline = installment.paymentDeadline
+      if (installment.isProrate) {
+        const { deadline } = this.installmentsService.generateInstallmentDates(loan, installment)
+        firstDeadline = deadline
+      }
+    } else {
+      // If no installments exist yet, calculate the first deadline based on loan dates
+      const { deadline } = this.installmentsService.generateInstallmentDates(loan, null)
       firstDeadline = deadline
     }
     const contractData: CreateContractDto = {
