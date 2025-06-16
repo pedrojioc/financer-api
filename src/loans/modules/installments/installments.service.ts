@@ -3,15 +3,16 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { addDay, addMonth, diffDays, format, monthDays, monthEnd } from '@formkit/tempo'
 
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
-import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
-import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
-import { Installment } from 'src/loans/entities/installment.entity'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
+import { CreateInstallmentDto } from 'src/loans/modules/installments/dtos/create-installment.dto'
+import { UpdateInstallmentDto } from 'src/loans/modules/installments/dtos/update-installment.dto'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 import { FilterPaginatorDto } from 'src/lib/filter-paginator/dtos/filter-paginator.dto'
 import { FilterPaginator } from 'src/lib/filter-paginator'
-import { InstallmentState } from 'src/loans/entities/installment-state.entity'
+import { InstallmentState } from 'src/loans/modules/installments/entities/installment-state.entity'
 import { Loan } from 'src/loans/entities/loan.entity'
-import { DeletedInstallment } from 'src/loans/entities/deleted-installment.entity'
+import { DeletedInstallment } from 'src/loans/modules/installments/entities/deleted-installment.entity'
+import { FilterInstallmentsDto } from './dtos/filter-installments.dto'
 
 @Injectable()
 export class InstallmentsService {
@@ -62,16 +63,19 @@ export class InstallmentsService {
     return installment
   }
 
-  findAllByLoan(loanId: number, params: FilterPaginatorDto) {
+  findAllByLoan(params: FilterInstallmentsDto) {
     const whereOptions: FindOptionsWhere<Installment> = {}
 
+    if (params.loanId) {
+      whereOptions.loanId = params.loanId
+    }
+
     if (params.state) {
-      // const installmentState = { id: params.state } as InstallmentState
       whereOptions.installmentStateId = params.state
     }
 
     const paginator = new FilterPaginator(this.repository, {
-      where: { loanId, ...whereOptions },
+      where: whereOptions,
       relations: ['installmentState'],
     })
     const result = paginator.paginate(params.page).execute()

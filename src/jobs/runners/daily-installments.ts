@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core'
-import { JobInterestsService } from '../services/jobs/job-interests.service'
-import { JobInterestModule } from './modules/job-interest.module'
+import { JobInstallmentsService } from '../job-installments/job-installments.service'
+import { JobInstallmentsModule } from '../job-installments/job-installments.module'
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.createApplicationContext(JobInterestModule)
-    const interestService = app.get(JobInterestsService)
+    const app = await NestFactory.createApplicationContext(JobInstallmentsModule)
+    const interestService = app.get(JobInstallmentsService)
 
     console.log('Running daily interest job...')
     await interestService.runDailyInterest()

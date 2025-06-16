@@ -6,10 +6,10 @@ import * as request from 'supertest'
 
 import { AppModule } from 'src/app.module'
 import { Loan } from 'src/loans/entities/loan.entity'
-import { Installment } from 'src/loans/entities/installment.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 import { DatabaseSeeder } from 'src/database/database-seeder'
 import { authenticate } from 'test/helpers/login'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
 import { Commission } from 'src/employees/entities/commission.entity'
 

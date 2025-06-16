@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Commission } from 'src/employees/entities/commission.entity'
-import { Installment } from 'src/loans/entities/installment.entity'
-import { Payment } from 'src/loans/entities/payments.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
+import { Payment } from 'src/loans/modules/payments/entities/payments.entity'
 import { DataSource, In, Repository } from 'typeorm'
 
 @Injectable()

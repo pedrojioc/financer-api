@@ -13,13 +13,12 @@ import { LOAN_STATES } from 'src/loans/shared/constants'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { LoanManagementService } from '../loans-management/loans-management.service'
 import { InstallmentsService } from '../installments/installments.service'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
 
 @Injectable()
 export class RefinancingService {
   constructor(
-    @InjectRepository(Refinancing) private readonly repository: Repository<Refinancing>,
     private readonly dataSource: DataSource,
     private readonly loanService: LoanManagementService,
     private readonly installmentService: InstallmentsService,

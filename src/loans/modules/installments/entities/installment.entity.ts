@@ -3,33 +3,33 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
-import { Loan } from './loan.entity'
-import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
-import { User } from 'src/users/entities/user.entity'
 
-@Entity({ name: 'deleted_installments' })
-export class DeletedInstallment {
+import { Loan } from 'src/loans/entities/loan.entity'
+import { InstallmentState } from './installment-state.entity'
+import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
+import { Payment } from 'src/loans/modules/payments/entities/payments.entity'
+import { CommissionInstallment } from 'src/employees/entities/commission-installment.entity'
+
+@Entity({ name: 'installments' })
+export class Installment {
   @PrimaryGeneratedColumn()
   id: number
-
-  @Column({ name: 'installment_id' })
-  installmentId: number
-
-  @ManyToOne(() => User, { nullable: false, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'user_id' })
-  User: User
-  @Column({ name: 'user_id', comment: 'Usuario que elimino el registro' })
-  userId: number
 
   @ManyToOne(() => Loan, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'loan_id' })
   loan: Loan
   @Column({ name: 'loan_id' })
   loanId: number
+
+  @ManyToOne(() => InstallmentState, { nullable: false, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'installment_state_id' })
+  installmentState: InstallmentState
 
   @Column({ name: 'installment_state_id' })
   installmentStateId: number
@@ -79,9 +79,21 @@ export class DeletedInstallment {
   @Column({ name: 'is_prorate', type: 'boolean', nullable: false, default: false })
   isProrate: boolean
 
+  @Column({ name: 'payment_date', type: 'date', nullable: true })
+  paymentDate: Date
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
+
+  @ManyToMany(() => Payment, (payment) => payment.installments)
+  payments: Payment[]
+
+  @OneToMany(
+    () => CommissionInstallment,
+    (commissionsInstallments) => commissionsInstallments.installment,
+  )
+  commissionsInstallments: CommissionInstallment[]
 }

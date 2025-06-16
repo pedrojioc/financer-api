@@ -2,6 +2,7 @@ import { registerAs } from '@nestjs/config'
 import * as handlebars from 'handlebars'
 
 export default registerAs('config', () => ({
+  mode: process.env.NODE_ENV,
   mysql: {
     type: 'mysql',
     port: Number(process.env.DATABASE_PORT),

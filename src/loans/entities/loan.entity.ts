@@ -11,12 +11,12 @@ import {
 
 import { Customer } from '../../customers/entities/customer.entity'
 import { Employee } from '../../employees/entities/employee.entity'
-import { PaymentPeriod } from './payment-period.entity'
+import { PaymentPeriod } from '../modules/payments/entities/payment-period.entity'
 import { LoanState } from './loan-state.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { InstallmentType } from '../modules/installments/entities/installment-type.entity'
 import { Refinancing } from '../modules/refinancing/entities/refinancing.entity'
-import { Payment } from './payments.entity'
+import { Payment } from 'src/loans/modules/payments/entities/payments.entity'
 
 @Entity({ name: 'loans' })
 export class Loan {

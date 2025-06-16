@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { Commission } from './commission.entity'
-import { Installment } from 'src/loans/entities/installment.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 
 @Entity({ name: 'commissions_installments' })
 export class CommissionInstallment {

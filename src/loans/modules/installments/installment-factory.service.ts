@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common'
-import { Installment } from 'src/loans/entities/installment.entity'
-import { AddPaymentDto } from '../payments/dtos/add-payment.dto'
-import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { Injectable, UnprocessableEntityException } from '@nestjs/common'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
+import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
+import { UpdateInstallmentDto } from 'src/loans/modules/installments/dtos/update-installment.dto'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { PayOffDto } from 'src/loans/dtos/pay-off.dto'
-import { INSTALLMENT_TYPES } from 'src/loans/shared/constants'
+import { INSTALLMENT_TYPES } from 'src/loans/modules/installments/constants/installments.c'
 
 interface InstallmentsDirectory {
   [installmentId: string]: Installment

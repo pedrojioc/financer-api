@@ -1,4 +1,4 @@
-import { Loan } from 'src/loans/entities/loan.entity'
+import { Loan } from '../../../entities/loan.entity'
 import {
   Column,
   CreateDateColumn,

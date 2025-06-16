@@ -5,3 +5,8 @@ export const INSTALLMENT_STATES = {
   OVERDUE: 4,
   REFINANCED: 5,
 }
+
+export const INSTALLMENT_TYPES = {
+  FIXED: 1,
+  FLEXIBLE: 2,
+}

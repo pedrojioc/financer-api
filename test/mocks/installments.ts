@@ -1,7 +1,7 @@
 import { parse } from '@formkit/tempo'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
-import { InstallmentState } from 'src/loans/entities/installment-state.entity'
-import { Installment } from 'src/loans/entities/installment.entity'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
+import { InstallmentState } from 'src/loans/modules/installments/entities/installment-state.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { PaymentMethod } from 'src/payment-methods/entities/payment-method.entity'
 

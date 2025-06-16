@@ -15,13 +15,13 @@ import { InstallmentsModule } from 'src/loans/modules/installments/installments.
         const telegramToken = configService.get('TELEGRAM_BOT_TOKEN')
         const appDomain = configService.get('APP_DOMAIN')
         const isProduction = process.env.NODE_ENV === 'production'
-        
+
         // Skip bot configuration if no token is provided
         if (!telegramToken) {
           console.warn('TELEGRAM_BOT_TOKEN not configured, skipping Telegram bot setup')
           return null
         }
-        
+
         // Use webhook only in production with a valid domain
         if (isProduction && appDomain) {
           return {
@@ -34,7 +34,7 @@ import { InstallmentsModule } from 'src/loans/modules/installments/installments.
             },
           }
         }
-        
+
         // Use polling for development or when no domain is configured
         return {
           token: telegramToken,

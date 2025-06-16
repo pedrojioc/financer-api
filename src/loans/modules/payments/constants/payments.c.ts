@@ -1,0 +1,12 @@
+export const PAYMENT_PERIODS = {
+  WEEKLY: 1,
+  FORTNIGHTLY: 2,
+  MONTHLY: 3,
+}
+
+export const PAYMENT_TYPES = {
+  NORMAL_INSTALLMENT: 1,
+  EXTRA_CAPITAL: 2,
+  MORA: 3,
+  OTHERS: 4,
+}

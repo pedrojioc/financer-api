@@ -9,10 +9,10 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 import { authenticate } from 'test/helpers/login'
 import { CreateLoanDto } from 'src/loans/dtos/loans.dto'
 import { LOAN_STATES } from 'src/loans/shared/constants'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { Interest } from 'src/loans/entities/interest.entity'
 
-import { Installment } from 'src/loans/entities/installment.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
 import { DatabaseSeeder } from 'src/database/database-seeder'
 

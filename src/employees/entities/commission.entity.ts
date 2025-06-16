@@ -11,7 +11,7 @@ import {
 
 import { Employee } from './employee.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
-import { Payment } from 'src/loans/entities/payments.entity'
+import { Payment } from 'src/loans/modules/payments/entities/payments.entity'
 import { CommissionInstallment } from './commission-installment.entity'
 
 @Entity({ name: 'commissions' })

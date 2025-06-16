@@ -12,8 +12,8 @@ import {
 } from 'typeorm'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { PaymentMethod } from 'src/payment-methods/entities/payment-method.entity'
-import { Installment } from './installment.entity'
-import { Loan } from './loan.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
+import { Loan } from 'src/loans/entities/loan.entity'
 import { Commission } from 'src/employees/entities/commission.entity'
 import { PaymentType } from './payment-type.entity'
 

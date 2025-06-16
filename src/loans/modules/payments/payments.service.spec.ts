@@ -1,20 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { PaymentsService } from './payments.service'
 
-import { InterestsService } from '../interests/interests.service'
+import { InterestsService } from '../loans/modules/interests/interests.service'
 import { InstallmentsService } from '../installments/installments.service'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { LoanManagementService } from '../loans-management/loans-management.service'
 import { AddPaymentDto } from './dtos/add-payment.dto'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { InstallmentFactoryService } from '../installments/installment-factory.service'
 import { mockLoan } from '../../../../test/mocks/loans'
 import { mockInstallment } from '../../../../test/mocks/installments'
 import { CommissionsService } from 'src/employees/services/commissions.service'
 import { EmployeesService } from 'src/employees/services/employees.service'
 import { DataSource, EntityManager, InsertResult, QueryRunner } from 'typeorm'
-import { Installment } from 'src/loans/entities/installment.entity'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 
 const mockInstallmentService = {
   create: jest.fn(),

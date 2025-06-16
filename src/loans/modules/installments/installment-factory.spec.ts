@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { InstallmentFactoryService } from './installment-factory.service'
 import { AddPaymentDto } from '../payments/dtos/add-payment.dto'
 import { mockInstallment } from '../../../../test/mocks/installments'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { BadRequestException, UnprocessableEntityException } from '@nestjs/common'
 
 describe('InstallmentFactoryService', () => {

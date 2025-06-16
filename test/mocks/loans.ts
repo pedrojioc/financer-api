@@ -1,7 +1,7 @@
 import { Loan } from 'src/loans/entities/loan.entity'
 import { mockCustomer } from './customers'
 import { mockEmployee } from './employees'
-import { PaymentPeriod } from 'src/loans/entities/payment-period.entity'
+import { PaymentPeriod } from 'src/loans/modules/payments/entities/payment-period.entity'
 import { LoanState } from 'src/loans/entities/loan-state.entity'
 import { InstallmentType } from 'src/loans/modules/installments/entities/installment-type.entity'
 
@@ -46,7 +46,7 @@ export const mockLoan: Loan = {
   parentLoan: null,
   parentLoanId: null,
   payments: [],
-  refinancing: []
+  refinancing: [],
 }
 
 const mockLoans = new Array(10).map((i) => ({ ...mockLoan, id: i + 1 }))

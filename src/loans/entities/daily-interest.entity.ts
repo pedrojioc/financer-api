@@ -9,7 +9,7 @@ import {
 } from 'typeorm'
 
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
-import { Installment } from './installment.entity'
+import { Installment } from '../modules/installments/entities/installment.entity'
 
 @Entity({ name: 'daily_interest' })
 export class DailyInterest {

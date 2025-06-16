@@ -1,35 +1,24 @@
 import { Injectable } from '@nestjs/common'
-import { Repository } from 'typeorm'
-import { InjectRepository } from '@nestjs/typeorm'
-import {
-  addDay,
-  addMonth,
-  diffDays,
-  format,
-  isAfter,
-  isEqual,
-  monthDays,
-  monthEnd,
-  parse,
-} from '@formkit/tempo'
-import { INTEREST_STATE } from '../../constants/interests'
-import { Interest } from '../../entities/interest.entity'
-import { INSTALLMENT_TYPES, LOAN_STATES, PAYMENT_PERIODS } from 'src/loans/shared/constants'
+
+import { diffDays, format, isAfter, isEqual, parse } from '@formkit/tempo'
+
+import { LOAN_STATES } from 'src/loans/shared/constants'
 import { LoanManagementService } from 'src/loans/modules/loans-management/loans-management.service'
 import { Loan } from 'src/loans/entities/loan.entity'
 import { InstallmentsService } from 'src/loans/modules/installments/installments.service'
-import { Installment } from 'src/loans/entities/installment.entity'
-import { UpdateInstallmentDto } from 'src/loans/dtos/update-installment.dto'
-import { INSTALLMENT_STATES } from 'src/loans/constants/installments'
-import { CreateInstallmentDto } from 'src/loans/dtos/create-installment.dto'
+import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
+import { UpdateInstallmentDto } from 'src/loans/modules/installments/dtos/update-installment.dto'
+import {
+  INSTALLMENT_STATES,
+  INSTALLMENT_TYPES,
+} from 'src/loans/modules/installments/constants/installments.c'
+import { CreateInstallmentDto } from 'src/loans/modules/installments/dtos/create-installment.dto'
 
 @Injectable()
-export class JobInterestsService {
-  private DAYS_OF_INTEREST = 30
+export class JobInstallmentsService {
   private DATE_FORMAT = 'YYYY-MM-DD'
   private TODAY = parse(new Date().toISOString(), this.DATE_FORMAT)
   constructor(
-    @InjectRepository(Interest) private repository: Repository<Interest>,
     private installmentService: InstallmentsService,
     private loanManagementService: LoanManagementService,
   ) {}
@@ -41,10 +30,6 @@ export class JobInterestsService {
     const MONTH_DAYS = 30
     const monthlyInterest = (debt * interestRate) / 100
     return monthlyInterest / MONTH_DAYS
-  }
-
-  calculateDaysLate(deadline: Date, today: Date) {
-    return diffDays(today, deadline)
   }
 
   private isTodayTheDeadline(deadline: Date): boolean {
@@ -203,53 +188,6 @@ export class JobInterestsService {
         await this.processFlexibleLoans(loan, today)
       }
     }
-    return true
-  }
-
-  async getOverdueInterests(todayString: string) {
-    return await this.repository
-      .createQueryBuilder('interest')
-      .where(
-        '(interest_state_id = :interestStateAwaiting OR interest_state_id = :interestStateOverdue) AND deadline < :currentDate',
-        {
-          interestStateAwaiting: INTEREST_STATE.AWAITING_PAYMENT,
-          interestStateOverdue: INTEREST_STATE.OVERDUE,
-          currentDate: todayString,
-        },
-      )
-      .getMany()
-  }
-
-  async checkOverduePayments() {
-    const today = this.TODAY
-    const overdueStates = {
-      [INSTALLMENT_STATES.AWAITING_PAYMENT]: true,
-      [INSTALLMENT_STATES.IN_PROGRESS]: true,
-    }
-
-    const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
-    const overdueInstallmentIds = []
-    for (const loan of loans) {
-      const installments = await this.installmentService.findUnpaidInstallments(loan.id)
-
-      let daysLate = 0
-      for (const installment of installments) {
-        const { installmentStateId } = installment
-        // Check and store if the installment state needs to be updated
-        if (overdueStates[installmentStateId]) overdueInstallmentIds.push(installment.id)
-
-        // Calcula y almacena los días en mora de cada cuota
-        const days = this.calculateDaysLate(installment.paymentDeadline, today)
-        if (days > daysLate) daysLate = days
-      }
-
-      await this.loanManagementService.rawUpdate(loan.id, { daysLate })
-    }
-
-    await this.installmentService.bulkUpdate(overdueInstallmentIds, {
-      installmentStateId: INSTALLMENT_STATES.OVERDUE,
-    })
-
     return true
   }
 

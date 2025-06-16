@@ -8,9 +8,9 @@ import { CreateLoanDto, UpdateLoanDto } from '../dtos/loans.dto'
 import { LoanManagementService } from '../modules/loans-management/loans-management.service'
 import { FilterLoansDto } from '../dtos/filter-loans.dto'
 import { ROLE } from 'src/roles/constants/role-ids'
-import { InstallmentsService } from '../modules/installments/installments.service'
-import { INSTALLMENT_STATES } from '../constants/installments'
-import { INSTALLMENT_TYPES } from '../shared/constants'
+import { InstallmentsService } from 'src/loans/modules/installments/installments.service'
+import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
+import { INSTALLMENT_TYPES } from 'src/loans/modules/installments/constants/installments.c'
 import { CreateContractDto } from '../dtos/create-contract.dto'
 import { toWords } from 'src/lib/numbers-to-words'
 import { calculateFixedInstallment } from 'src/lib/mathematical-operations'
@@ -171,7 +171,7 @@ export class LoansService {
     )
     const installment = await this.installmentsService.findFirstInstallment(loan.id)
     let firstDeadline: Date
-    
+
     if (installment) {
       firstDeadline = installment.paymentDeadline
       if (installment.isProrate) {
