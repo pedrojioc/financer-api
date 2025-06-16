@@ -22,10 +22,6 @@ export class CreateLoanDto {
 
   @IsPositive()
   @IsNotEmpty()
-  readonly paymentPeriodId: number
-
-  @IsPositive()
-  @IsNotEmpty()
   readonly installmentTypeId: number
 
   @IsNumber()

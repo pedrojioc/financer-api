@@ -11,7 +11,6 @@ import {
 
 import { Customer } from '../../customers/entities/customer.entity'
 import { Employee } from '../../employees/entities/employee.entity'
-import { PaymentPeriod } from '../modules/payments/entities/payment-period.entity'
 import { LoanState } from './loan-state.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 import { InstallmentType } from '../modules/installments/entities/installment-type.entity'
@@ -34,13 +33,6 @@ export class Loan {
   employee: Employee
   @Column({ name: 'employee_id' })
   employeeId: number
-
-  @ManyToOne(() => PaymentPeriod, { nullable: false, onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'payment_period_id' })
-  paymentPeriod: PaymentPeriod
-
-  @Column({ name: 'payment_period_id' })
-  paymentPeriodId: number
 
   @ManyToOne(() => LoanState, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'loan_state_id' })

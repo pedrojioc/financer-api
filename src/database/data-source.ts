@@ -1,3 +1,9 @@
+/**
+ *  DataSource configuration for the migrations.
+ *  Required for the migrations to work.
+ *  @author Pedro J
+ */
+
 import * as dotenv from 'dotenv'
 import { DataSource } from 'typeorm'
 

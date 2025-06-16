@@ -4,11 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { LoansController } from './controllers/loans.controller'
 import { LoansService } from './services/loans.service'
 import { Loan } from './entities/loan.entity'
-
-import { PaymentPeriod } from './modules/payments/entities/payment-period.entity'
 import { LoanState } from './entities/loan-state.entity'
-import { PaymentPeriodsService } from './services/payment-periods.service'
-import { PaymentPeriodsController } from './controllers/payment-periods.controller'
 import { LoanStatesService } from './services/loan-states.service'
 import { LoanStatesController } from './controllers/loan-states.controller'
 
@@ -21,8 +17,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Loan, PaymentPeriod, LoanState]),
-
+    TypeOrmModule.forFeature([Loan, LoanState]),
     LoansManagementModule,
     RefinancingModule,
     InstallmentsModule,
@@ -30,7 +25,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
     PaymentsModule,
     PdfModule,
   ],
-  controllers: [LoansController, PaymentPeriodsController, LoanStatesController],
-  providers: [LoansService, PaymentPeriodsService, LoanStatesService],
+  controllers: [LoansController, LoanStatesController],
+  providers: [LoansService, LoanStatesService],
 })
 export class LoansModule {}

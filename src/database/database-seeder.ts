@@ -8,10 +8,8 @@ import { CreateLoanDto } from 'src/loans/dtos/loans.dto'
 import { LOAN_STATES } from 'src/loans/shared/constants'
 import { CreateInterestDto } from 'src/loans/dtos/create-interest.dto'
 import { Interest } from 'src/loans/entities/interest.entity'
-import { PaymentPeriod } from 'src/loans/modules/payments/entities/payment-period.entity'
 import { CreateInstallmentDto } from 'src/loans/modules/installments/dtos/create-installment.dto'
 import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
-import { PAYMENT_PERIODS } from '../loans/modules/payments/constants/payments.c'
 
 @Injectable()
 export class DatabaseSeeder {
@@ -49,7 +47,6 @@ export class DatabaseSeeder {
     const loanData: CreateLoanDto = {
       customerId: 5,
       employeeId,
-      paymentPeriodId: PAYMENT_PERIODS.MONTHLY,
       amount: 5000000,
       debt: 5000000,
       interestRate: 10,
@@ -65,7 +62,6 @@ export class DatabaseSeeder {
     const loan = repo.create(loanData)
     loan.customer = { id: loanData.customerId } as Customer
     loan.employee = { id: loanData.employeeId } as Employee
-    loan.paymentPeriod = { id: loanData.paymentPeriodId } as PaymentPeriod
 
     return await repo.save(loan)
   }
