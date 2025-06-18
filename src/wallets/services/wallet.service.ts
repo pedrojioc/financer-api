@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { EntityManager, Repository } from 'typeorm'
 
 import { Wallet } from '../entities/wallet.entity'
-import { Transaction } from '../entities/transactions.entity'
+import { Transaction } from '../entities/transaction.entity'
 import { CreateWalletDto, UpdateWalletDto } from '../dto/wallet.dto'
 import { CreateTransactionDto, NewTransactionDto } from '../dto/transactions.dto'
 
@@ -20,27 +20,32 @@ export class WalletService {
 
   /**
    * Realiza una transacción en una cartera
-   * @param type
    * @param newtransactionDto
    * @param manager
    * @returns Promise<Wallet>
    */
-  async transaction(
-    type: 'inflow' | 'outflow',
-    newtransactionDto: NewTransactionDto,
-    manager: EntityManager,
-  ) {
+  async transaction(newtransactionDto: NewTransactionDto, manager: EntityManager) {
     const wallet = await manager.findOne(Wallet, { where: { id: newtransactionDto.walletId } })
-    const amount = type === 'inflow' ? newtransactionDto.amount : -newtransactionDto.amount
+    const amount =
+      newtransactionDto.flowType === 'INFLOW' ? newtransactionDto.amount : -newtransactionDto.amount
     const previousBalance = Number(wallet.amount)
     const newBalance = previousBalance + amount
     const transactionDto: CreateTransactionDto = {
       ...newtransactionDto,
+      amount,
       previousBalance,
       newBalance,
     }
 
     await manager.insert(Transaction, transactionDto)
     return manager.update(Wallet, wallet.id, { amount: newBalance })
+  }
+
+  findAll() {
+    return this.walletRepository.find()
+  }
+
+  findOne(id: number, relations?: string[]) {
+    return this.walletRepository.findOne({ where: { id }, relations })
   }
 }

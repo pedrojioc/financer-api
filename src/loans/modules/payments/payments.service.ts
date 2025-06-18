@@ -24,9 +24,9 @@ import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
 import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from './constants/payments.c'
 import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
-import { WalletService } from 'src/financial-accounting/services/wallet.service'
-import { WALLET_TYPES } from 'src/financial-accounting/constants/wallet-constants'
-import { TRANSACTION_TYPES } from 'src/financial-accounting/constants/transaction-constants'
+import { WalletService } from 'src/wallets/services/wallet.service'
+import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
+import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
 
 @Injectable()
 export class PaymentsService {
@@ -237,10 +237,9 @@ export class PaymentsService {
 
       // ? Realizar la transacción
       if (totalToCapital > 0) {
-        const TYPE = 'inflow'
         await this.walletService.transaction(
-          TYPE,
           {
+            flowType: 'INFLOW',
             walletId: WALLET_TYPES.CAPITAL,
             amount: totalToCapital,
             description: `Pago a capital del préstamo ${loan.id}`,
@@ -302,8 +301,8 @@ export class PaymentsService {
 
     // ? Realizar la transacción
     await this.walletService.transaction(
-      'inflow',
       {
+        flowType: 'INFLOW',
         walletId: WALLET_TYPES.CAPITAL,
         amount: capital,
         description: `Pago a capital del préstamo ${loan.id}`,

@@ -16,9 +16,9 @@ import { toWords } from 'src/lib/numbers-to-words'
 import { calculateFixedInstallment } from 'src/lib/mathematical-operations'
 import { PdfService } from 'src/pdf/pdf.service'
 import { currencyFormat } from 'src/utils/number-format'
-import { WalletService } from 'src/financial-accounting/services/wallet.service'
-import { WALLET_TYPES } from 'src/financial-accounting/constants/wallet-constants'
-import { TRANSACTION_TYPES } from 'src/financial-accounting/constants/transaction-constants'
+import { WalletService } from 'src/wallets/services/wallet.service'
+import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
+import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
 
 @Injectable()
@@ -220,8 +220,8 @@ export class LoansService {
     manager?: EntityManager,
   ) {
     await this.walletService.transaction(
-      'outflow',
       {
+        flowType: 'OUTFLOW',
         amount,
         walletId,
         loanId,

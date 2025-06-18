@@ -5,7 +5,7 @@ import { InstallmentsModule } from '../installments/installments.module'
 import { PaymentsController } from './payments.controller'
 import { EmployeesModule } from 'src/employees/employees.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { FinancialAccountingModule } from 'src/financial-accounting/financial-accounting.module'
+import { WalletsModule } from 'src/wallets/wallets.module'
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { FinancialAccountingModule } from 'src/financial-accounting/financial-ac
     LoansManagementModule,
     InstallmentsModule,
     EmployeesModule,
-    FinancialAccountingModule,
+    WalletsModule,
   ],
   providers: [PaymentsService],
   exports: [PaymentsService],

@@ -26,6 +26,15 @@ export class Transaction {
   @Column({ name: 'loan_id', nullable: true })
   loanId: number
 
+  @Column({
+    name: 'flow_type',
+    type: 'enum',
+    enum: ['INFLOW', 'OUTFLOW'],
+    nullable: false,
+    comment: 'Direction of the transaction',
+  })
+  flowType: 'INFLOW' | 'OUTFLOW'
+
   @Column({ name: 'description', nullable: false })
   description: string
 

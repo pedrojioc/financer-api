@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsNumber, IsString, IsDate, IsPositive, IsOptional } from 'class-validator'
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsDate,
+  IsPositive,
+  IsOptional,
+  IsEnum,
+} from 'class-validator'
 import { OmitType } from '@nestjs/mapped-types'
 
 export class CreateTransactionDto {
@@ -9,6 +17,10 @@ export class CreateTransactionDto {
   @IsPositive()
   @IsNotEmpty()
   walletId: number
+
+  @IsEnum(['INFLOW', 'OUTFLOW'])
+  @IsNotEmpty()
+  flowType: 'INFLOW' | 'OUTFLOW'
 
   @IsPositive()
   @IsOptional()

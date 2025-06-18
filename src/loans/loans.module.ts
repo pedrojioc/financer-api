@@ -11,9 +11,9 @@ import { LoanStatesController } from './controllers/loan-states.controller'
 import { LoansManagementModule } from './modules/loans-management/loans-management.module'
 import { RefinancingModule } from './modules/refinancing/refinancing.module'
 import { PdfModule } from 'src/pdf/pdf.module'
-import { FinancialAccountingModule } from 'src/financial-accounting/financial-accounting.module'
 import { InstallmentsModule } from 'src/loans/modules/installments/installments.module'
 import { PaymentsModule } from './modules/payments/payments.module'
+import { WalletsModule } from 'src/wallets/wallets.module'
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { PaymentsModule } from './modules/payments/payments.module'
     LoansManagementModule,
     RefinancingModule,
     InstallmentsModule,
-    FinancialAccountingModule,
+    WalletsModule,
     PaymentsModule,
     PdfModule,
   ],

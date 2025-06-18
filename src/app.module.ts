@@ -18,8 +18,8 @@ import { ReportsModule } from './reports/reports.module'
 import { TasksModule } from './tasks/tasks.module'
 import { PdfModule } from './pdf/pdf.module'
 import { GendersModule } from './genders/genders.module'
-import { FinancialAccountingModule } from './financial-accounting/financial-accounting.module'
 import { LoanReportsModule } from './loan-reports/loan-reports.module'
+import { WalletsModule } from './wallets/wallets.module'
 import config from './config'
 
 @Module({
@@ -45,7 +45,7 @@ import config from './config'
     TasksModule,
     PdfModule,
     GendersModule,
-    FinancialAccountingModule,
+    WalletsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
