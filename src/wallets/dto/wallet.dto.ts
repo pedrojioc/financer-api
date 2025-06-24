@@ -7,7 +7,7 @@ export class CreateWalletDto {
 
   @IsNumber()
   @IsNotEmpty()
-  amount: number
+  balance: number
 
   @IsString()
   @IsOptional()
@@ -25,7 +25,7 @@ export class UpdateWalletDto {
 
   @IsNumber()
   @IsOptional()
-  amount?: number
+  balance?: number
 
   @IsString()
   @IsOptional()

@@ -20,6 +20,7 @@ import { WalletService } from 'src/wallets/services/wallet.service'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
 import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
+import { TransactionsService } from 'src/wallets/services/transactions.service'
 
 @Injectable()
 export class LoansService {
@@ -27,8 +28,9 @@ export class LoansService {
     @InjectRepository(Loan) private repository: Repository<Loan>,
     private dataSource: DataSource,
     private loanManagementService: LoanManagementService,
-    private readonly walletService: WalletService,
     private readonly installmentsService: InstallmentsService,
+    private readonly transactionService: TransactionsService,
+    private readonly walletService: WalletService,
     private readonly pdfService: PdfService,
   ) {}
 
@@ -47,10 +49,16 @@ export class LoansService {
   @Transactional()
   async create(createDto: CreateLoanDto, manager?: EntityManager) {
     const disbursementDay = createDto.startAt.getDate()
-    if (createDto.needsProrate && disbursementDay === createDto.paymentDay)
+    if (createDto.needsProrate && disbursementDay === createDto.paymentDay) {
       throw new Error(
         'Disbursement day cannot be the same as payment day when prorating is needed.',
       )
+    }
+
+    const capitalWallet = await this.walletService.findOne(WALLET_TYPES.CAPITAL)
+    if (capitalWallet.balance < createDto.amount) {
+      throw new Error('El balance de la cartera es insuficiente para crear el crédito')
+    }
 
     const loan = await this.loanManagementService.create(createDto, manager)
     await this.makeTransaction(loan.id, WALLET_TYPES.CAPITAL, createDto.amount, manager)
@@ -219,7 +227,7 @@ export class LoansService {
     amount: number,
     manager?: EntityManager,
   ) {
-    await this.walletService.transaction(
+    await this.transactionService.transaction(
       {
         flowType: 'OUTFLOW',
         amount,

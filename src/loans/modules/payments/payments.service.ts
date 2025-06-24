@@ -24,9 +24,9 @@ import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
 import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from './constants/payments.c'
 import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
-import { WalletService } from 'src/wallets/services/wallet.service'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
 import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
+import { TransactionsService } from 'src/wallets/services/transactions.service'
 
 @Injectable()
 export class PaymentsService {
@@ -36,7 +36,7 @@ export class PaymentsService {
     private installmentFactoryService: InstallmentFactoryService,
     private commissionService: CommissionsService,
     private employeeService: EmployeesService,
-    private walletService: WalletService,
+    private transactionService: TransactionsService,
     private dataSource: DataSource,
   ) {}
 
@@ -237,7 +237,7 @@ export class PaymentsService {
 
       // ? Realizar la transacción
       if (totalToCapital > 0) {
-        await this.walletService.transaction(
+        await this.transactionService.transaction(
           {
             flowType: 'INFLOW',
             walletId: WALLET_TYPES.CAPITAL,
@@ -300,12 +300,12 @@ export class PaymentsService {
     const installmentsPaid = 1
 
     // ? Realizar la transacción
-    await this.walletService.transaction(
+    await this.transactionService.transaction(
       {
         flowType: 'INFLOW',
         walletId: WALLET_TYPES.CAPITAL,
         amount: capital,
-        description: `Pago a capital del préstamo ${loan.id}`,
+        description: `Pago a capital crédito ID${loan.id}`,
         loanId: loan.id,
         transactionTypeId: TRANSACTION_TYPES.PAYMENT,
         date: paymentDto.paymentDate,

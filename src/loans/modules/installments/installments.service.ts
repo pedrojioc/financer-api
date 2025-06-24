@@ -161,7 +161,7 @@ export class InstallmentsService {
     return query.getMany()
   }
 
-  async getAmountOfInterestInArrears(loanId: number) {
+  async getOverdueInterestAmount(loanId: number) {
     const { amount } = await this.repository
       .createQueryBuilder()
       .select('SUM(interest)', 'amount')
@@ -171,7 +171,36 @@ export class InstallmentsService {
       })
       .getRawOne()
 
-    return amount
+    return amount || 0
+  }
+  async getPendingInterestAmount(loanId: number, includeCurrentInstallment: boolean = false) {
+    const query = this.repository
+      .createQueryBuilder()
+      .select('SUM(interest)', 'amount')
+      .where('loan_id = :loanId', { loanId })
+
+    if (includeCurrentInstallment) {
+      query.andWhere(
+        '(installment_state_id = :stateOverdue OR installment_state_id = :stateAwaitingPayment OR installment_state_id = :stateInProgress)',
+        {
+          stateInProgress: INSTALLMENT_STATES.IN_PROGRESS,
+          stateAwaitingPayment: INSTALLMENT_STATES.AWAITING_PAYMENT,
+          stateOverdue: INSTALLMENT_STATES.OVERDUE,
+        },
+      )
+    } else {
+      query.andWhere(
+        '(installment_state_id = :stateOverdue OR installment_state_id = :stateAwaitingPayment)',
+        {
+          stateOverdue: INSTALLMENT_STATES.OVERDUE,
+          stateAwaitingPayment: INSTALLMENT_STATES.AWAITING_PAYMENT,
+        },
+      )
+    }
+
+    const { amount } = await query.getRawOne()
+
+    return Number(amount) || 0
   }
 
   async makePayment(

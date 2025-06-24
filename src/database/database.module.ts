@@ -19,7 +19,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
           entities: [__dirname + '/../**/*.entity.{ts,js}'],
           synchronize: false,
           autoLoadEntities: true,
-          logging: config.get('mode') !== 'production',
+          logging: false,
           extra: { connectionLimit: 10 },
         }
       },

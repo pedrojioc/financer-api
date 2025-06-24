@@ -92,7 +92,7 @@ export class WhatsAppService {
 
       if (this.isNotificationsDisabled(loan, today)) continue
 
-      const amountInArrears = await this.installmentsService.getAmountOfInterestInArrears(loan.id)
+      const amountInArrears = await this.installmentsService.getOverdueInterestAmount(loan.id)
       const pendingAmount = currencyFormat(amountInArrears)
 
       const data: WhatsAppForDelayDto = {

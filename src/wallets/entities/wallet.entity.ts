@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { Transaction } from './transaction.entity'
+import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 
 @Entity({ name: 'wallets' })
 export class Wallet {
@@ -9,8 +10,8 @@ export class Wallet {
   @Column({ name: 'name', nullable: false })
   name: string
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
-  amount: number
+  @Column({ type: 'decimal', precision: 15, scale: 2, transformer: new NumberColumnTransformer() })
+  balance: number
 
   @Column({ name: 'description', nullable: true })
   description: string

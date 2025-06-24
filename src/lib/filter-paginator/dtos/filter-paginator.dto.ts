@@ -20,7 +20,8 @@ export class FilterPaginatorDto {
   @IsOptional()
   page?: number = 1
 
-  @IsOptional()
   @IsPositive()
+  @Type(() => Number)
+  @IsOptional()
   itemsPerPage?: number = 10
 }

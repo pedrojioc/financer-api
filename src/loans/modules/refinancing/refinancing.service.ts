@@ -15,6 +15,10 @@ import { LoanManagementService } from '../loans-management/loans-management.serv
 import { InstallmentsService } from '../installments/installments.service'
 import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
+import { WalletService } from 'src/wallets/services/wallet.service'
+import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
+import { TransactionsService } from 'src/wallets/services/transactions.service'
+import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
 
 @Injectable()
 export class RefinancingService {
@@ -22,6 +26,8 @@ export class RefinancingService {
     private readonly dataSource: DataSource,
     private readonly loanService: LoanManagementService,
     private readonly installmentService: InstallmentsService,
+    private readonly walletService: WalletService,
+    private readonly transactionService: TransactionsService,
   ) {}
 
   generateRefinancingObject(
@@ -55,6 +61,25 @@ export class RefinancingService {
     if (newRefinancingDto.amount < originLoan.debt)
       throw new BadRequestException('New loan amount must be greater than the origin loan debt')
 
+    const pendingInterestAmount = await this.installmentService.getPendingInterestAmount(
+      originLoan.id,
+      true,
+    )
+    const totalDebt = originLoan.debt + pendingInterestAmount
+    let amountToRefinance = 0
+    console.log(originLoan.debt)
+    console.log(pendingInterestAmount)
+    console.log(newRefinancingDto.amount, totalDebt)
+    if (newRefinancingDto.amount > totalDebt) {
+      amountToRefinance = newRefinancingDto.amount - totalDebt
+    }
+    const capitalWallet = await this.walletService.findOne(WALLET_TYPES.CAPITAL)
+
+    if (capitalWallet.balance < amountToRefinance) {
+      throw new UnprocessableEntityException(
+        'El balance de la cartera es insuficiente para refinanciar el crédito',
+      )
+    }
     // Update the origin loan state to "refinanced"
     await this.loanService.rawUpdate(
       originLoan.id,
@@ -71,6 +96,21 @@ export class RefinancingService {
     const refinancingDto = this.generateRefinancingObject(originLoan, newLoan, newRefinancingDto)
     await manager.insert(Refinancing, refinancingDto)
 
+    // Create the transaction
+    if (amountToRefinance > 0) {
+      await this.transactionService.transaction(
+        {
+          walletId: capitalWallet.id,
+          amount: amountToRefinance,
+          flowType: 'OUTFLOW',
+          description: 'Refinanciamiento',
+          date: new Date(),
+          transactionTypeId: TRANSACTION_TYPES.DISBURSEMENT,
+          loanId: newLoan.id,
+        },
+        manager,
+      )
+    }
     return { originLoan, newLoan }
   }
 

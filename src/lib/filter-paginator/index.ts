@@ -6,6 +6,13 @@ interface IOptions {
   itemsPerPage?: number
 }
 
+interface PaginatorResult {
+  data: any[]
+  total: number
+  currentPage: number
+  itemsPerPage: number
+}
+
 export class FilterPaginator<T> {
   private queryOptions: FindManyOptions = {
     order: { id: 'DESC' },
@@ -45,7 +52,7 @@ export class FilterPaginator<T> {
     return this
   }
 
-  async execute() {
+  async execute(): Promise<PaginatorResult> {
     const [data, counter] = await this.repository.findAndCount(this.queryOptions)
     return {
       data,

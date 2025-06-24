@@ -26,7 +26,7 @@ export class TelegramNotificationsService {
     for (const loan of loans) {
       rest--
       const { daysLate } = loan
-      const amountInArrears = await this.installmentService.getAmountOfInterestInArrears(loan.id)
+      const amountInArrears = await this.installmentService.getOverdueInterestAmount(loan.id)
       const pendingAmount = currencyFormat(amountInArrears)
       let item = `<strong>${loan.customer.name}</strong> \n Monto: ${pendingAmount} \n Días en mora: ${daysLate}`
       if (rest > 0) {

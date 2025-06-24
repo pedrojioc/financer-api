@@ -8,6 +8,8 @@ import {
   IsEnum,
 } from 'class-validator'
 import { OmitType } from '@nestjs/mapped-types'
+import { Transform } from 'class-transformer'
+import { parse } from '@formkit/tempo'
 
 export class CreateTransactionDto {
   @IsPositive()
@@ -42,6 +44,11 @@ export class CreateTransactionDto {
 
   @IsDate()
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return parse(value, 'YYYY-MM-DD')
+
+    return value
+  })
   date: Date
 }
 

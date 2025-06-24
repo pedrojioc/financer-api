@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { TransactionType } from './transaction-type.entity'
 import { Wallet } from './wallet.entity'
 import { Loan } from '../../loans/entities/loan.entity'
+import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
 
 @Entity({ name: 'transactions' })
 export class Transaction {
@@ -38,13 +39,30 @@ export class Transaction {
   @Column({ name: 'description', nullable: false })
   description: string
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    transformer: new NumberColumnTransformer(),
+  })
   amount: number
 
-  @Column({ name: 'previous_balance', type: 'decimal', precision: 15, scale: 2 })
+  @Column({
+    name: 'previous_balance',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    transformer: new NumberColumnTransformer(),
+  })
   previousBalance: number
 
-  @Column({ name: 'new_balance', type: 'decimal', precision: 15, scale: 2 })
+  @Column({
+    name: 'new_balance',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    transformer: new NumberColumnTransformer(),
+  })
   newBalance: number
 
   @Column({ name: 'date', type: 'date' })
