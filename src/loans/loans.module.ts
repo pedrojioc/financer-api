@@ -14,6 +14,7 @@ import { PdfModule } from 'src/pdf/pdf.module'
 import { InstallmentsModule } from 'src/loans/modules/installments/installments.module'
 import { PaymentsModule } from './modules/payments/payments.module'
 import { WalletsModule } from 'src/wallets/wallets.module'
+import { LoanHistoryModule } from './modules/loan-history/loan-history.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { WalletsModule } from 'src/wallets/wallets.module'
     WalletsModule,
     PaymentsModule,
     PdfModule,
+    LoanHistoryModule,
   ],
   controllers: [LoansController, LoanStatesController],
   providers: [LoansService, LoanStatesService],
