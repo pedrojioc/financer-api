@@ -1,4 +1,13 @@
-import { Between, DataSource, EntityManager, FindOptionsWhere, MoreThan, Repository } from 'typeorm'
+import {
+	Between,
+	DataSource,
+	EntityManager,
+	FindOptionsWhere,
+	In,
+	MoreThan,
+	Not,
+	Repository,
+} from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
@@ -323,6 +332,7 @@ export class InstallmentsService {
 		const result = await this.repository.find({
 			where: {
 				paymentDeadline: Between(startDate, endDate),
+				installmentStateId: Not(In([INSTALLMENT_STATES.PAID, INSTALLMENT_STATES.REFINANCED])),
 			},
 			relations: { loan: { customer: true } },
 		})
