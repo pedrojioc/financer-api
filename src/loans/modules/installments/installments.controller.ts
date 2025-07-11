@@ -9,31 +9,36 @@ import { AuthJwtPayload } from 'src/auth/types/token.model'
 
 @Controller('installments')
 export class InstallmentsController {
-  constructor(private readonly installmentService: InstallmentsService) {}
+	constructor(private readonly installmentService: InstallmentsService) {}
 
-  @Post()
-  create(@Body() data: CreateInstallmentDto) {
-    return this.installmentService.create(data)
-  }
+	@Post()
+	create(@Body() data: CreateInstallmentDto) {
+		return this.installmentService.create(data)
+	}
 
-  @Get()
-  findAll(@Query() params: FilterInstallmentsDto) {
-    return this.installmentService.findAllByLoan(params)
-  }
+	@Get()
+	findAll(@Query() params: FilterInstallmentsDto) {
+		return this.installmentService.findAllByLoan(params)
+	}
 
-  @Patch(':id')
-  update(@Param('id') id: number, @Body() data: UpdateInstallmentDto) {
-    return this.installmentService.update(id, data)
-  }
+	@Patch(':id')
+	update(@Param('id') id: number, @Body() data: UpdateInstallmentDto) {
+		return this.installmentService.update(id, data)
+	}
 
-  @Delete(':id')
-  remove(@Req() req: Request, @Param('id') id: number) {
-    const payload = req.user as AuthJwtPayload
-    return this.installmentService.delete(id, payload.sub)
-  }
+	@Delete(':id')
+	remove(@Req() req: Request, @Param('id') id: number) {
+		const payload = req.user as AuthJwtPayload
+		return this.installmentService.delete(id, payload.sub)
+	}
 
-  @Get('/states')
-  getStates() {
-    return this.installmentService.getStates()
-  }
+	@Get('/states')
+	getStates() {
+		return this.installmentService.getStates()
+	}
+
+	@Get('/month')
+	getInstallmentsOfTheMonth(@Query() date: string) {
+		return this.installmentService.getInstallmentsByMonth(date)
+	}
 }

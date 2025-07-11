@@ -1,7 +1,16 @@
-import { DataSource, EntityManager, FindOptionsWhere, MoreThan, Repository } from 'typeorm'
+import { Between, DataSource, EntityManager, FindOptionsWhere, MoreThan, Repository } from 'typeorm'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { addDay, addMonth, diffDays, format, monthDays, monthEnd } from '@formkit/tempo'
+import {
+	addDay,
+	addMonth,
+	diffDays,
+	format,
+	monthDays,
+	monthEnd,
+	monthStart,
+	parse,
+} from '@formkit/tempo'
 
 import {
 	INSTALLMENT_STATES,
@@ -304,6 +313,28 @@ export class InstallmentsService {
 			where: { loanId },
 			order: { id: 'asc' },
 		})
+	}
+
+	async getInstallmentsByMonth(date: string) {
+		const d = parse(date)
+		const startDate = monthStart(d)
+		const endDate = monthEnd(d)
+
+		const result = await this.repository.find({
+			where: {
+				paymentDeadline: Between(startDate, endDate),
+			},
+			relations: { loan: { customer: true } },
+		})
+
+		const installments = result.reduce((acc, installment) => {
+			const key = format(installment.paymentDeadline, 'YYYY-MM-DD')
+			acc[key] = acc[key] || []
+			acc[key].push(installment)
+			return acc
+		}, {})
+
+		return installments
 	}
 
 	/*
