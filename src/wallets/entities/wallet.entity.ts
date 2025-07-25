@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { Transaction } from './transaction.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
+import { TransactionCategory } from './transaction-category.entity'
 
 @Entity({ name: 'wallets' })
 export class Wallet {
@@ -29,4 +30,12 @@ export class Wallet {
 
   @OneToMany(() => Transaction, (transaction) => transaction.wallet)
   transactions: Transaction[]
+
+  @ManyToMany(() => TransactionCategory, (transactionCategory) => transactionCategory.wallets)
+  @JoinTable({
+    name: 'wallet_transaction_categories',
+    joinColumn: { name: 'wallet_id' },
+    inverseJoinColumn: { name: 'transaction_category_id' },
+  })
+  transactionCategories: TransactionCategory[]
 }

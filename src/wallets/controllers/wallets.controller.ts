@@ -24,8 +24,8 @@ export class WalletsController {
 
   @Get(':id')
   async findOne(@Param('id') id: number) {
-    const wallet = await this.walletService.findOne(id)
-    const balanceHistory = await this.walletService.getBalanceHistory(id)
+    const wallet = await this.walletService.findOne(id, ['transactionCategories'])
+    const balanceHistory = await this.transactionService.getBalanceHistoryOfWallet(id)
     const transactionFrom7Days = await this.transactionService.findTransactionsFromDaysAgo(
       id,
       7,
@@ -38,12 +38,12 @@ export class WalletsController {
     )
 
     const variationLast7Days = this.walletService.porcentualVariation(
-      transactionFrom7Days.newBalance,
+      transactionFrom7Days?.newBalance || 0,
       wallet.balance,
     )
 
     const variationLast30Days = this.walletService.porcentualVariation(
-      transactionFrom30Days.newBalance,
+      transactionFrom30Days?.newBalance || 0,
       wallet.balance,
     )
 

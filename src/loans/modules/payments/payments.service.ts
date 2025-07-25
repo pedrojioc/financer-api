@@ -25,7 +25,10 @@ import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from './constants/payments.c'
 import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
-import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
+import {
+  TRANSACTION_CATEGORIES,
+  TRANSACTION_TYPES,
+} from 'src/wallets/constants/transaction-constants'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
 
 @Injectable()
@@ -126,7 +129,10 @@ export class PaymentsService {
   }
 
   async addPayment(paymentDto: AddPaymentDto) {
-    const loan = await this.loanManagementService.findOne(paymentDto.loanId, ['employee'])
+    const loan = await this.loanManagementService.findOne(paymentDto.loanId, [
+      'employee',
+      'customer',
+    ])
 
     /*
     Se deshabilita temporalmente la validación de cuotas atrasadas
@@ -242,9 +248,25 @@ export class PaymentsService {
             flowType: 'INFLOW',
             walletId: WALLET_TYPES.CAPITAL,
             amount: totalToCapital,
-            description: `Pago a capital del préstamo ${loan.id}`,
+            description: `Abono a capital, préstamo ${loan.id}, cliente ${loan.customer.name}`,
             loanId: loan.id,
             transactionTypeId: TRANSACTION_TYPES.PAYMENT,
+            transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
+            date: paymentDto.paymentDate,
+          },
+          manager,
+        )
+      }
+      if (totalToInterest > 0) {
+        await this.transactionService.transaction(
+          {
+            flowType: 'INFLOW',
+            walletId: WALLET_TYPES.UTILITY,
+            amount: totalToInterest,
+            description: `Pago de intereses, préstamo ${loan.id}, cliente ${loan.customer.name}`,
+            loanId: loan.id,
+            transactionTypeId: TRANSACTION_TYPES.PAYMENT,
+            transactionCategoryId: TRANSACTION_CATEGORIES.INTEREST,
             date: paymentDto.paymentDate,
           },
           manager,
@@ -308,6 +330,7 @@ export class PaymentsService {
         description: `Pago a capital crédito ID${loan.id}`,
         loanId: loan.id,
         transactionTypeId: TRANSACTION_TYPES.PAYMENT,
+        transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
         date: paymentDto.paymentDate,
       },
       manager,

@@ -58,7 +58,8 @@ export class TransactionsService {
   async findTransactionsFromDaysAgo(walletId: number, days: number, lastIfEmpty: boolean = false) {
     let transaction = await this.transactionRepo
       .createQueryBuilder('transaction')
-      .where('transaction.date >= CURRENT_DATE - INTERVAL :days DAY', { days })
+      .where('transaction.wallet_id = :walletId', { walletId })
+      .andWhere('transaction.date >= CURRENT_DATE - INTERVAL :days DAY', { days })
       .orderBy('transaction.date', 'ASC')
       .getOne()
 
@@ -71,5 +72,21 @@ export class TransactionsService {
     }
 
     return transaction
+  }
+
+  async getBalanceHistoryOfWallet(walletId: number, take: number = 10) {
+    const transactions = await this.transactionRepo.find({
+      where: { walletId },
+      order: { createdAt: 'DESC' },
+      take,
+    })
+
+    const balanceHistory = transactions.map((transaction, index) => {
+      return {
+        date: transaction.createdAt,
+        value: transaction.newBalance,
+      }
+    })
+    return balanceHistory
   }
 }

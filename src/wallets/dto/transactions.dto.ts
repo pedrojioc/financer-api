@@ -18,6 +18,10 @@ export class CreateTransactionDto {
 
   @IsPositive()
   @IsNotEmpty()
+  transactionCategoryId: number
+
+  @IsPositive()
+  @IsNotEmpty()
   walletId: number
 
   @IsEnum(['INFLOW', 'OUTFLOW'])

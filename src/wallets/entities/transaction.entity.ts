@@ -3,6 +3,7 @@ import { TransactionType } from './transaction-type.entity'
 import { Wallet } from './wallet.entity'
 import { Loan } from '../../loans/entities/loan.entity'
 import { NumberColumnTransformer } from 'src/shared/transformers/number-column-transformer'
+import { TransactionCategory } from './transaction-category.entity'
 
 @Entity({ name: 'transactions' })
 export class Transaction {
@@ -14,6 +15,12 @@ export class Transaction {
   transactionType: TransactionType
   @Column({ name: 'transaction_type_id', nullable: false })
   transactionTypeId: number
+
+  @ManyToOne(() => TransactionCategory, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'transaction_category_id' })
+  transactionCategory: TransactionCategory
+  @Column({ name: 'transaction_category_id', nullable: true })
+  transactionCategoryId: number
 
   @ManyToOne(() => Wallet, { onDelete: 'RESTRICT', nullable: false })
   @JoinColumn({ name: 'wallet_id' })

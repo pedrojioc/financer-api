@@ -18,7 +18,10 @@ import { Transactional } from 'src/shared/transactional/transactional.decorator'
 import { WalletService } from 'src/wallets/services/wallet.service'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
-import { TRANSACTION_TYPES } from 'src/wallets/constants/transaction-constants'
+import {
+  TRANSACTION_CATEGORIES,
+  TRANSACTION_TYPES,
+} from 'src/wallets/constants/transaction-constants'
 
 @Injectable()
 export class RefinancingService {
@@ -106,6 +109,7 @@ export class RefinancingService {
           description: 'Refinanciamiento',
           date: new Date(),
           transactionTypeId: TRANSACTION_TYPES.DISBURSEMENT,
+          transactionCategoryId: TRANSACTION_CATEGORIES.DISBURSEMENT,
           loanId: newLoan.id,
         },
         manager,
