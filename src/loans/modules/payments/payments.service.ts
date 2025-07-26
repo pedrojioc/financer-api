@@ -25,10 +25,7 @@ import { CreateCommissionDto } from 'src/employees/dtos/create-commission.dto'
 import { PAYMENT_TYPES } from './constants/payments.c'
 import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
-import {
-  TRANSACTION_CATEGORIES,
-  TRANSACTION_TYPES,
-} from 'src/wallets/constants/transaction-constants'
+import { TRANSACTION_CATEGORIES } from 'src/wallets/constants/transaction-constants'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
 
 @Injectable()
@@ -250,7 +247,6 @@ export class PaymentsService {
             amount: totalToCapital,
             description: `Abono a capital, préstamo ${loan.id}, cliente ${loan.customer.name}`,
             loanId: loan.id,
-            transactionTypeId: TRANSACTION_TYPES.PAYMENT,
             transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
             date: paymentDto.paymentDate,
           },
@@ -265,7 +261,6 @@ export class PaymentsService {
             amount: totalToInterest,
             description: `Pago de intereses, préstamo ${loan.id}, cliente ${loan.customer.name}`,
             loanId: loan.id,
-            transactionTypeId: TRANSACTION_TYPES.PAYMENT,
             transactionCategoryId: TRANSACTION_CATEGORIES.INTEREST,
             date: paymentDto.paymentDate,
           },
@@ -329,7 +324,6 @@ export class PaymentsService {
         amount: capital,
         description: `Pago a capital crédito ID${loan.id}`,
         loanId: loan.id,
-        transactionTypeId: TRANSACTION_TYPES.PAYMENT,
         transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
         date: paymentDto.paymentDate,
       },

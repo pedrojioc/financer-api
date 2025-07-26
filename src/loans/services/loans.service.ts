@@ -64,7 +64,14 @@ export class LoansService {
     }
 
     const loan = await this.loanManagementService.create(createDto, manager)
-    await this.makeTransaction(loan.id, WALLET_TYPES.CAPITAL, createDto.amount, manager)
+    const description = `Desembolso crédito ID${loan.id}`
+    await this.makeTransaction(
+      loan.id,
+      WALLET_TYPES.CAPITAL,
+      createDto.amount,
+      description,
+      manager,
+    )
 
     if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED && createDto.needsProrate) {
       await this.createProratedInstallment(loan, disbursementDay, manager)
@@ -230,6 +237,7 @@ export class LoansService {
     loanId: number,
     walletId: number,
     amount: number,
+    description: string,
     manager?: EntityManager,
   ) {
     await this.transactionService.transaction(
@@ -238,9 +246,8 @@ export class LoansService {
         amount,
         walletId,
         loanId,
-        transactionTypeId: TRANSACTION_TYPES.DISBURSEMENT,
         transactionCategoryId: TRANSACTION_CATEGORIES.DISBURSEMENT,
-        description: 'Desembolso',
+        description,
         date: new Date(),
       },
       manager,

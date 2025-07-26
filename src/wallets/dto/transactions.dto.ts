@@ -14,10 +14,6 @@ import { parse } from '@formkit/tempo'
 export class CreateTransactionDto {
   @IsPositive()
   @IsNotEmpty()
-  transactionTypeId: number
-
-  @IsPositive()
-  @IsNotEmpty()
   transactionCategoryId: number
 
   @IsPositive()

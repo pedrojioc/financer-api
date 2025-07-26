@@ -4,9 +4,8 @@ import {
   InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
 import { Refinancing } from './entities/refinancing.entity'
-import { DataSource, EntityManager, Repository } from 'typeorm'
+import { DataSource, EntityManager } from 'typeorm'
 import { NewRefinancingDto } from './dtos/new-refinancing.dto'
 import { CreateRefinancingDto } from './dtos/create-refinancing.dto'
 import { LOAN_STATES } from 'src/loans/shared/constants'
@@ -108,7 +107,6 @@ export class RefinancingService {
           flowType: 'OUTFLOW',
           description: 'Refinanciamiento',
           date: new Date(),
-          transactionTypeId: TRANSACTION_TYPES.DISBURSEMENT,
           transactionCategoryId: TRANSACTION_CATEGORIES.DISBURSEMENT,
           loanId: newLoan.id,
         },
