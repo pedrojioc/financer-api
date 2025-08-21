@@ -73,13 +73,27 @@ export class Installment {
   })
   interestPaid: number
 
-  @Column({ name: 'capital_paid', type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({
+    name: 'capital_paid',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new NumberColumnTransformer(),
+  })
   capitalPaid: number
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({ type: 'decimal', precision: 15, scale: 2, transformer: new NumberColumnTransformer() })
   total: number
 
-  @Column({ name: 'total_paid', type: 'decimal', precision: 15, scale: 2, default: 0 })
+  @Column({
+    name: 'total_paid',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new NumberColumnTransformer(),
+  })
   totalPaid: number
 
   @Column({ name: 'is_prorate', type: 'boolean', nullable: false, default: false })
