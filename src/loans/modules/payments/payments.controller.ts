@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { PaymentsService } from './payments.service'
 import { NewPaymentDto } from './dtos/new-payment.dto'
 import { ProcessPaymentV2Dto } from './dtos/process-payment-v2.dto'
@@ -23,6 +32,9 @@ export class PaymentsController {
 
   @Post()
   create(@Body() data: NewPaymentDto) {
+    throw new UnprocessableEntityException(
+      'This endpoint is deprecated, please use /payments/v2 instead.',
+    )
     return this.paymentService.newPayment(data)
   }
 
