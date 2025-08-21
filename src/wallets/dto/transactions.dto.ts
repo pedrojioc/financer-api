@@ -11,7 +11,16 @@ import { OmitType } from '@nestjs/mapped-types'
 import { Transform } from 'class-transformer'
 import { parse } from '@formkit/tempo'
 
+export enum FlowType {
+  INFLOW = 'INFLOW',
+  OUTFLOW = 'OUTFLOW',
+}
+
 export class CreateTransactionDto {
+  @IsEnum(FlowType)
+  flowType: FlowType
+
+  @IsNotEmpty()
   @IsPositive()
   @IsNotEmpty()
   transactionCategoryId: number
@@ -19,10 +28,6 @@ export class CreateTransactionDto {
   @IsPositive()
   @IsNotEmpty()
   walletId: number
-
-  @IsEnum(['INFLOW', 'OUTFLOW'])
-  @IsNotEmpty()
-  flowType: 'INFLOW' | 'OUTFLOW'
 
   @IsPositive()
   @IsOptional()

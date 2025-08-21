@@ -17,6 +17,7 @@ import { Transactional } from 'src/shared/transactional/transactional.decorator'
 import { WalletService } from 'src/wallets/services/wallet.service'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
+import { FlowType } from 'src/wallets/dto/transactions.dto'
 import {
   TRANSACTION_CATEGORIES,
   TRANSACTION_TYPES,
@@ -104,7 +105,7 @@ export class RefinancingService {
         {
           walletId: capitalWallet.id,
           amount: amountToRefinance,
-          flowType: 'OUTFLOW',
+          flowType: FlowType.OUTFLOW,
           description: 'Refinanciamiento',
           date: new Date(),
           transactionCategoryId: TRANSACTION_CATEGORIES.DISBURSEMENT,

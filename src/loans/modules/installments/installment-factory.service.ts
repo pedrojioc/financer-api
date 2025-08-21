@@ -1,6 +1,6 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common'
 import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
-import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
+import { NewPaymentDto } from 'src/loans/modules/payments/dtos/new-payment.dto'
 import { UpdateInstallmentDto } from 'src/loans/modules/installments/dtos/update-installment.dto'
 import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { PayOffDto } from 'src/loans/dtos/pay-off.dto'
@@ -17,7 +17,7 @@ interface InstallmentsObjects {
 export class InstallmentFactoryService {
   generateInstallmentObject(
     installments: InstallmentsDirectory,
-    paymentDto: AddPaymentDto | PayOffDto,
+    paymentDto: NewPaymentDto | PayOffDto,
     installmentTypeId: number,
   ): InstallmentsObjects {
     const installmentsObjects = {}
@@ -63,5 +63,18 @@ export class InstallmentFactoryService {
       total: 0,
       installmentStateId: INSTALLMENT_STATES.PAID,
     }
+  }
+
+  applyInstallmentUpdate(
+    installmentId: number,
+    updateDto: UpdateInstallmentDto,
+    manager: any,
+  ): Promise<void> {
+    return manager
+      .createQueryBuilder()
+      .update(Installment)
+      .set(updateDto)
+      .where('id = :id', { id: installmentId })
+      .execute()
   }
 }

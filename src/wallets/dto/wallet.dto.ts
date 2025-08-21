@@ -1,4 +1,6 @@
+import { OmitType } from '@nestjs/mapped-types'
 import { IsString, IsNumber, IsOptional, IsNotEmpty, IsPositive } from 'class-validator'
+import { NewTransactionDto } from './transactions.dto'
 
 export class CreateWalletDto {
   @IsString()
@@ -31,3 +33,5 @@ export class UpdateWalletDto {
   @IsOptional()
   description?: string
 }
+
+export class WalletMovementDto extends OmitType(NewTransactionDto, ['flowType']) {}

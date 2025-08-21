@@ -6,7 +6,7 @@ import { EntityManager } from 'typeorm'
 import { Transaction } from '../entities/transaction.entity'
 import { Wallet } from '../entities/wallet.entity'
 import { FilterPaginator } from 'src/lib/filter-paginator'
-import { NewTransactionDto } from '../dto/transactions.dto'
+import { NewTransactionDto, FlowType } from '../dto/transactions.dto'
 import { CreateTransactionDto } from '../dto/transactions.dto'
 import { FilterTransactionsDto } from '../dto/filter-transactions.dto'
 
@@ -15,6 +15,8 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
+    @InjectRepository(Wallet)
+    private readonly walletRepo: Repository<Wallet>,
     private readonly entityManager: EntityManager,
   ) {}
 
@@ -24,22 +26,9 @@ export class TransactionsService {
    * @param manager
    * @returns Promise<Wallet>
    */
-  async transaction(newtransactionDto: NewTransactionDto, manager?: EntityManager) {
+  async create(transactionDto: CreateTransactionDto, manager?: EntityManager) {
     const query = manager || this.entityManager
-    const wallet = await query.findOne(Wallet, { where: { id: newtransactionDto.walletId } })
-    const amount =
-      newtransactionDto.flowType === 'INFLOW' ? newtransactionDto.amount : -newtransactionDto.amount
-    const previousBalance = Number(wallet.balance)
-    const newBalance = previousBalance + amount
-    const transactionDto: CreateTransactionDto = {
-      ...newtransactionDto,
-      amount,
-      previousBalance,
-      newBalance,
-    }
-
     await query.insert(Transaction, transactionDto)
-    return query.update(Wallet, wallet.id, { balance: newBalance })
   }
 
   findAllByWallet(walletId: number, params: FilterTransactionsDto) {
@@ -88,5 +77,38 @@ export class TransactionsService {
       }
     })
     return balanceHistory
+  }
+
+  async transaction(newTransactionDto: NewTransactionDto, manager?: EntityManager): Promise<Wallet> {
+    const query = manager || this.entityManager
+    
+    const wallet = await query.findOne(Wallet, { where: { id: newTransactionDto.walletId } })
+    if (!wallet) {
+      throw new Error(`Wallet with id ${newTransactionDto.walletId} not found`)
+    }
+
+    const previousBalance = Number(wallet.balance)
+    let amount = newTransactionDto.amount
+    let newBalance: number
+
+    if (newTransactionDto.flowType === FlowType.OUTFLOW) {
+      amount = -amount
+      newBalance = previousBalance + amount
+    } else {
+      newBalance = previousBalance + amount
+    }
+
+    wallet.balance = newBalance
+    await query.save(wallet)
+
+    const transactionData: CreateTransactionDto = {
+      ...newTransactionDto,
+      amount,
+      previousBalance,
+      newBalance,
+    }
+
+    await query.insert(Transaction, transactionData)
+    return wallet
   }
 }

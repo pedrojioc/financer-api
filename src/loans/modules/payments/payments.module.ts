@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { PaymentsService } from './payments.service'
+import { PaymentProcessorV2Service } from './services/payment-processor-v2.service'
 import { LoansManagementModule } from '../loans-management/loans-management.module'
 import { InstallmentsModule } from '../installments/installments.module'
 import { PaymentsController } from './payments.controller'
@@ -15,7 +16,7 @@ import { WalletsModule } from 'src/wallets/wallets.module'
     EmployeesModule,
     WalletsModule,
   ],
-  providers: [PaymentsService],
+  providers: [PaymentsService, PaymentProcessorV2Service],
   exports: [PaymentsService],
   controllers: [PaymentsController],
 })

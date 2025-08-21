@@ -13,6 +13,16 @@ export class UpdateInstallmentDto extends PartialType(CreateInstallmentDto) {
   @IsOptional()
   interestPaymentAmount?: number
 
+  @IsNumber()
+  @Type(() => Number)
+  @IsOptional()
+  capitalPaid?: number
+
+  @IsNumber()
+  @Type(() => Number)
+  @IsOptional()
+  totalPaid?: number
+
   @IsDate()
   @IsOptional()
   paymentDate?: Date

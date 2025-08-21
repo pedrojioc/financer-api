@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types'
 import { IsOptional, IsPositive } from 'class-validator'
-import { AddPaymentDto } from '../modules/payments/dtos/add-payment.dto'
+import { NewPaymentDto } from '../modules/payments/dtos/new-payment.dto'
 
-export class PayOffDto extends PartialType(AddPaymentDto) {
+export class PayOffDto extends PartialType(NewPaymentDto) {
   instalmentId?: number
 }

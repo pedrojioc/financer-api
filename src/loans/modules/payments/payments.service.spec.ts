@@ -6,7 +6,7 @@ import { InstallmentsService } from '../installments/installments.service'
 
 import { UnprocessableEntityException } from '@nestjs/common'
 import { LoanManagementService } from '../loans-management/loans-management.service'
-import { AddPaymentDto } from './dtos/add-payment.dto'
+import { AddPaymentDto } from './dtos/new-payment.dto'
 import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
 import { InstallmentFactoryService } from '../installments/installment-factory.service'
 import { mockLoan } from '../../../../test/mocks/loans'

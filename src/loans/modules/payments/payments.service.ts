@@ -7,11 +7,16 @@ import {
 
 import { InstallmentsService } from '../installments/installments.service'
 import { LoanManagementService } from '../loans-management/loans-management.service'
-import { AddPaymentDto } from './dtos/add-payment.dto'
+import { NewPaymentDto } from './dtos/new-payment.dto'
+import { ProcessPaymentV2Dto } from './dtos/process-payment-v2.dto'
 
 import { InstallmentFactoryService } from '../installments/installment-factory.service'
+import { PaymentProcessorV2Service } from './services/payment-processor-v2.service'
 import { Loan } from 'src/loans/entities/loan.entity'
-import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
+import {
+  INSTALLMENT_STATES,
+  INSTALLMENT_TYPES,
+} from 'src/loans/modules/installments/constants/installments.c'
 import { CommissionsService } from 'src/employees/services/commissions.service'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
 import { DataSource, EntityManager, In } from 'typeorm'
@@ -27,6 +32,8 @@ import { GetLoanPaymentsDto } from './dtos/get-loan-payments.dto'
 import { WALLET_TYPES } from 'src/wallets/constants/wallet-constants'
 import { TRANSACTION_CATEGORIES } from 'src/wallets/constants/transaction-constants'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
+import { FlowType } from 'src/wallets/dto/transactions.dto'
+import { WalletService } from 'src/wallets/services/wallet.service'
 
 @Injectable()
 export class PaymentsService {
@@ -34,9 +41,11 @@ export class PaymentsService {
     private loanManagementService: LoanManagementService,
     private installmentService: InstallmentsService,
     private installmentFactoryService: InstallmentFactoryService,
+    private paymentProcessorV2Service: PaymentProcessorV2Service,
     private commissionService: CommissionsService,
     private employeeService: EmployeesService,
     private transactionService: TransactionsService,
+    private walletService: WalletService,
     private dataSource: DataSource,
   ) {}
 
@@ -125,7 +134,7 @@ export class PaymentsService {
     return paymentId
   }
 
-  async addPayment(paymentDto: AddPaymentDto) {
+  async newPayment(paymentDto: NewPaymentDto) {
     const loan = await this.loanManagementService.findOne(paymentDto.loanId, [
       'employee',
       'customer',
@@ -145,11 +154,14 @@ export class PaymentsService {
   }
 
   async capitalPayment(paymentDto: NewCapitalPaymentDto) {
-    const loan = await this.loanManagementService.findOne(paymentDto.loanId, ['employee'])
+    const loan = await this.loanManagementService.findOne(paymentDto.loanId, [
+      'employee',
+      'customer',
+    ])
     return await this.processCapitalPayment(paymentDto, loan)
   }
 
-  validateMultipleInstallments(paymentDto: AddPaymentDto) {
+  validateMultipleInstallments(paymentDto: NewPaymentDto) {
     if (paymentDto.customInterest > 0)
       throw new BadRequestException(
         'El pago de intereses agregados o parciales solo es permitido para una cuota',
@@ -159,7 +171,7 @@ export class PaymentsService {
   }
   @Transactional()
   private async processInstallmentPayment(
-    paymentDto: AddPaymentDto,
+    paymentDto: NewPaymentDto,
     loan: Loan,
     manager?: EntityManager,
   ) {
@@ -242,7 +254,7 @@ export class PaymentsService {
       if (totalToCapital > 0) {
         await this.transactionService.transaction(
           {
-            flowType: 'INFLOW',
+            flowType: FlowType.INFLOW,
             walletId: WALLET_TYPES.CAPITAL,
             amount: totalToCapital,
             description: `Abono a capital, préstamo ${loan.id}, cliente ${loan.customer.name}`,
@@ -256,7 +268,7 @@ export class PaymentsService {
       if (totalToInterest > 0) {
         await this.transactionService.transaction(
           {
-            flowType: 'INFLOW',
+            flowType: FlowType.INFLOW,
             walletId: WALLET_TYPES.UTILITY,
             amount: totalToInterest,
             description: `Pago de intereses, préstamo ${loan.id}, cliente ${loan.customer.name}`,
@@ -319,10 +331,10 @@ export class PaymentsService {
     // ? Realizar la transacción
     await this.transactionService.transaction(
       {
-        flowType: 'INFLOW',
+        flowType: FlowType.INFLOW,
         walletId: WALLET_TYPES.CAPITAL,
         amount: capital,
-        description: `Pago a capital crédito ID${loan.id}`,
+        description: `Abono a capital, préstamo ${loan.id}, cliente ${loan.customer.name}`,
         loanId: loan.id,
         transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
         date: paymentDto.paymentDate,
@@ -362,5 +374,107 @@ export class PaymentsService {
     if (hasInstallments) {
       throw new UnprocessableEntityException('Operación inválida, existen cuotas sin pagar')
     }
+  }
+
+  async newPaymentV2(paymentDto: ProcessPaymentV2Dto) {
+    const loan = await this.loanManagementService.findOne(paymentDto.loanId, [
+      'employee',
+      'customer',
+    ])
+
+    await this.processInstallmentPaymentV2(paymentDto, loan)
+  }
+
+  @Transactional()
+  private async processInstallmentPaymentV2(
+    paymentDto: ProcessPaymentV2Dto,
+    loan: Loan,
+    manager?: EntityManager,
+  ) {
+    const result = await this.paymentProcessorV2Service.applyPaymentToInstallments(paymentDto, loan)
+    const {
+      installmentsToUpdate,
+      totalCapital,
+      totalInterest,
+      installmentsIds,
+      totalCommission,
+      commissionDetails,
+      installmentsPaid,
+    } = result
+
+    for (const { id, updateDto } of installmentsToUpdate) {
+      await this.installmentService.atomicUpdate(manager, id, updateDto)
+    }
+
+    // ? Crear el pago
+    const paymentId = await this.transactionalCreate(manager, {
+      loanId: loan.id,
+      paymentMethodId: paymentDto.paymentMethodId,
+      capital: totalCapital,
+      interest: totalInterest,
+      total: totalCapital + totalInterest,
+      installmentIds: installmentsIds,
+      date: paymentDto.paymentDate,
+      paymentTypeId: PAYMENT_TYPES.NORMAL_INSTALLMENT,
+    })
+
+    // ? Crear la comisión
+    if (totalCommission > 0) {
+      const employeeId = loan.employee.id
+      const commissionDto: CreateCommissionDto = {
+        employeeId,
+        paymentId: paymentId,
+        interestAmount: totalInterest,
+        amount: totalCommission,
+        rate: loan.commissionRate,
+        isPaid: false,
+      }
+
+      await this.commissionService.transactionalCreate(manager, commissionDto, commissionDetails)
+      await this.employeeService.transactionalUpdateBalance(manager, employeeId, totalCommission)
+    }
+
+    // Espacio para transacciones
+    if (totalCapital > 0) {
+      await this.walletService.deposit(
+        {
+          walletId: WALLET_TYPES.CAPITAL,
+          amount: totalCapital,
+          description: `Abono a capital, préstamo ${loan.id}, cliente ${loan.customer.name}`,
+          loanId: loan.id,
+          transactionCategoryId: TRANSACTION_CATEGORIES.PAYMENT,
+          date: paymentDto.paymentDate,
+        },
+        manager,
+      )
+    }
+
+    if (totalInterest > 0) {
+      await this.walletService.deposit(
+        {
+          walletId: WALLET_TYPES.UTILITY,
+          amount: totalInterest,
+          description: `Pago de intereses, préstamo ${loan.id}, cliente ${loan.customer.name}`,
+          loanId: loan.id,
+          transactionCategoryId: TRANSACTION_CATEGORIES.INTEREST,
+          date: paymentDto.paymentDate,
+        },
+        manager,
+      )
+    }
+
+    // ? Calcular los días de atraso
+    const daysLate = await this.installmentService.calculateDaysLate(loan.id, manager)
+
+    // ? Actualizar los datos del préstamo
+    await this.loanManagementService.updateLoanAfterPayment(
+      manager,
+      loan,
+      totalInterest,
+      totalCapital,
+      daysLate,
+      totalCommission,
+      installmentsPaid,
+    )
   }
 }

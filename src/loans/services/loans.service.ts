@@ -24,6 +24,7 @@ import {
 } from 'src/wallets/constants/transaction-constants'
 import { Transactional } from 'src/shared/transactional/transactional.decorator'
 import { TransactionsService } from 'src/wallets/services/transactions.service'
+import { FlowType } from 'src/wallets/dto/transactions.dto'
 
 @Injectable()
 export class LoansService {
@@ -242,7 +243,7 @@ export class LoansService {
   ) {
     await this.transactionService.transaction(
       {
-        flowType: 'OUTFLOW',
+        flowType: FlowType.OUTFLOW,
         amount,
         walletId,
         loanId,

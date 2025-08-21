@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common'
 import { PaymentsService } from './payments.service'
-import { AddPaymentDto } from './dtos/add-payment.dto'
+import { NewPaymentDto } from './dtos/new-payment.dto'
+import { ProcessPaymentV2Dto } from './dtos/process-payment-v2.dto'
 import { NewCapitalPaymentDto } from './dtos/new-capital-payment.dto'
 import { FilterPaymentsDto } from './dtos/filter-payments.dto'
 import { MarkPaymentAsReceived } from './dtos/bulk-received.dto'
@@ -21,8 +22,13 @@ export class PaymentsController {
   }
 
   @Post()
-  create(@Body() data: AddPaymentDto) {
-    return this.paymentService.addPayment(data)
+  create(@Body() data: NewPaymentDto) {
+    return this.paymentService.newPayment(data)
+  }
+
+  @Post('v2')
+  createV2(@Body() data: ProcessPaymentV2Dto) {
+    return this.paymentService.newPaymentV2(data)
   }
 
   @Post('capital')

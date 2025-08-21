@@ -13,7 +13,7 @@ import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/ins
 import { Interest } from 'src/loans/entities/interest.entity'
 
 import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
-import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
+import { AddPaymentDto } from 'src/loans/modules/payments/dtos/new-payment.dto'
 import { DatabaseSeeder } from 'src/database/database-seeder'
 
 describe('LoansController (e2e)', () => {

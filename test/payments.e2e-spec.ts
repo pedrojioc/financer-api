@@ -10,7 +10,7 @@ import { Installment } from 'src/loans/modules/installments/entities/installment
 import { DatabaseSeeder } from 'src/database/database-seeder'
 import { authenticate } from 'test/helpers/login'
 import { INSTALLMENT_STATES } from 'src/loans/modules/installments/constants/installments.c'
-import { AddPaymentDto } from 'src/loans/modules/payments/dtos/add-payment.dto'
+import { AddPaymentDto } from 'src/loans/modules/payments/dtos/new-payment.dto'
 import { Commission } from 'src/employees/entities/commission.entity'
 
 describe('PaymentsController (e2e)', () => {
