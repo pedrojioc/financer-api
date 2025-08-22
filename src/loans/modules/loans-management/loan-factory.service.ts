@@ -50,7 +50,7 @@ export class LoanFactoryService {
     if (capital > 0) {
       data.debt = Number(loan.debt) - capital
     }
-    if (data.debt === 0) data.loanStateId = LOAN_STATES.FINALIZED
+    if (data.debt <= 0) data.loanStateId = LOAN_STATES.FINALIZED
     return data
   }
 }

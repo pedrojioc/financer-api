@@ -213,10 +213,9 @@ export class PaymentProcessorV2Service {
     installmentTypeId: number,
   ) {
     const pendingInterest = installment.interest - installment.interestPaid
-    const pendingCapital = installment.capital - installment.capitalPaid
 
     const interestToApply = installmentPayment.interest || pendingInterest
-    let capitalToApply = installmentPayment.capital || pendingCapital
+    let capitalToApply = installmentPayment.capital
 
     if (installmentTypeId === INSTALLMENT_TYPES.FLEXIBLE) {
       capitalToApply = installmentPayment.capital || 0
