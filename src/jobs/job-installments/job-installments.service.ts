@@ -47,10 +47,10 @@ export class JobInstallmentsService {
     let interest = Number(installment.interest)
 
     const days = installment.days + 1
-    if (installment.days < 15) {
+    if (installment.days <= 15) {
       interest = interest + dailyInterest
-    } else if (installment.days === 15) {
-      interest = interest + dailyInterest * 16
+    } else {
+      interest = interest + dailyInterest * 15
     }
 
     return {
