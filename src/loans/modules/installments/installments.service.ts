@@ -8,7 +8,7 @@ import {
   Not,
   Repository,
 } from 'typeorm'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import {
   addDay,
@@ -34,6 +34,7 @@ import { InstallmentState } from 'src/loans/modules/installments/entities/instal
 import { Loan } from 'src/loans/entities/loan.entity'
 import { DeletedInstallment } from 'src/loans/modules/installments/entities/deleted-installment.entity'
 import { FilterInstallmentsDto } from './dtos/filter-installments.dto'
+import { Transactional } from 'src/shared/transactional/transactional.decorator'
 
 @Injectable()
 export class InstallmentsService {
@@ -66,6 +67,17 @@ export class InstallmentsService {
     }
     const entity = this.repository.create(installmentDto)
     return this.repository.save(entity)
+  }
+
+  @Transactional()
+  async handleCreateRequest(installmentDto: CreateInstallmentDto, manager?: EntityManager) {
+    if (!manager) throw new UnprocessableEntityException('Manager not found')
+    await manager.update(
+      Loan,
+      { id: installmentDto.loanId },
+      { currentInstallmentNumber: installmentDto.installmentNumber },
+    )
+    return await this.create(installmentDto, manager)
   }
 
   findAll(where: FindOptionsWhere<Installment> = {}) {
@@ -303,21 +315,22 @@ export class InstallmentsService {
    * @param iRate The interest rate of the loan.
    * @param amount The amount of the loan.
    * @param installmentsNumber The total number of installments for the loan.
-   * @param installmentNumber The number of the installment to calculate.
+   * @param currentInstallmentNumber The number of the installment to calculate.
    * @returns An object containing the interest, amortization, and total amount for the installment.
    */
   calculateFixedInstallment(
     iRate: number,
     amount: number,
     installmentsNumber: number,
-    installmentNumber: number,
+    currentInstallmentNumber: number,
   ) {
     const interestRate = iRate / 100
     const installmentAmount =
       (amount * interestRate) / (1 - Math.pow(1 + interestRate, -installmentsNumber))
     const prevBalance =
-      amount * Math.pow(1 + interestRate, installmentNumber - 1) -
-      installmentAmount * ((Math.pow(1 + interestRate, installmentNumber - 1) - 1) / interestRate)
+      amount * Math.pow(1 + interestRate, currentInstallmentNumber - 1) -
+      installmentAmount *
+        ((Math.pow(1 + interestRate, currentInstallmentNumber - 1) - 1) / interestRate)
 
     const interest = prevBalance * interestRate
     const amortization = installmentAmount - interest

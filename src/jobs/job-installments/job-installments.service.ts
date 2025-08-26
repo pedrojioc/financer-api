@@ -9,187 +9,187 @@ import { InstallmentsService } from 'src/loans/modules/installments/installments
 import { Installment } from 'src/loans/modules/installments/entities/installment.entity'
 import { UpdateInstallmentDto } from 'src/loans/modules/installments/dtos/update-installment.dto'
 import {
-	INSTALLMENT_STATES,
-	INSTALLMENT_TYPES,
+  INSTALLMENT_STATES,
+  INSTALLMENT_TYPES,
 } from 'src/loans/modules/installments/constants/installments.c'
 import { CreateInstallmentDto } from 'src/loans/modules/installments/dtos/create-installment.dto'
 
 @Injectable()
 export class JobInstallmentsService {
-	private DATE_FORMAT = 'YYYY-MM-DD'
-	private TODAY = parse(new Date().toISOString(), this.DATE_FORMAT)
-	constructor(
-		private installmentService: InstallmentsService,
-		private loanManagementService: LoanManagementService,
-	) {}
+  private DATE_FORMAT = 'YYYY-MM-DD'
+  private TODAY = parse(new Date().toISOString(), this.DATE_FORMAT)
+  constructor(
+    private installmentService: InstallmentsService,
+    private loanManagementService: LoanManagementService,
+  ) {}
 
-	// -------------------------------
-	// COMMON METHODS
-	// -------------------------------
-	getDailyInterest(debt: number, interestRate: number) {
-		const MONTH_DAYS = 30
-		const monthlyInterest = (debt * interestRate) / 100
-		return monthlyInterest / MONTH_DAYS
-	}
+  // -------------------------------
+  // COMMON METHODS
+  // -------------------------------
+  getDailyInterest(debt: number, interestRate: number) {
+    const MONTH_DAYS = 30
+    const monthlyInterest = (debt * interestRate) / 100
+    return monthlyInterest / MONTH_DAYS
+  }
 
-	private isTodayTheDeadline(deadline: Date): boolean {
-		return isEqual(deadline, format(this.TODAY, this.DATE_FORMAT))
-	}
+  private isTodayTheDeadline(deadline: Date): boolean {
+    return isEqual(deadline, format(this.TODAY, this.DATE_FORMAT))
+  }
 
-	// -------------------------------
-	// METHODS FOR FLEXIBLE CREDITS
-	// -------------------------------
+  // -------------------------------
+  // METHODS FOR FLEXIBLE CREDITS
+  // -------------------------------
 
-	private generateUpdateInterestDto(
-		installment: Installment,
-		dailyInterest: number,
-	): UpdateInstallmentDto {
-		let interest = Number(installment.interest)
+  private generateUpdateInterestDto(
+    installment: Installment,
+    dailyInterest: number,
+  ): UpdateInstallmentDto {
+    let interest = Number(installment.interest)
 
-		const days = installment.days + 1
-		if (installment.days < 15) {
-			interest = interest + dailyInterest
-		} else if (installment.days === 15) {
-			interest = interest + dailyInterest * 16
-		}
+    const days = installment.days + 1
+    if (installment.days < 15) {
+      interest = interest + dailyInterest
+    } else if (installment.days === 15) {
+      interest = interest + dailyInterest * 16
+    }
 
-		return {
-			interest,
-			days,
-		}
-	}
+    return {
+      interest,
+      days,
+    }
+  }
 
-	private generateFlexibleInstallmentData(
-		loan: Loan,
-		installment: Installment,
-		dailyInterest: number,
-	): CreateInstallmentDto {
-		const installmentNumber = loan.currentInstallmentNumber + 1
-		const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
-			loan,
-			installment,
-		)
-		return {
-			loanId: loan.id,
-			installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
-			installmentTypeId: INSTALLMENT_TYPES.FLEXIBLE,
-			debt: loan.debt,
-			startsOn,
-			paymentDeadline: deadline,
-			days: 1,
-			capital: 0,
-			interest: dailyInterest,
-			interestPaid: 0,
-			total: 0,
-			installmentNumber,
-		}
-	}
+  private generateFlexibleInstallmentData(
+    loan: Loan,
+    installment: Installment,
+    dailyInterest: number,
+  ): CreateInstallmentDto {
+    const installmentNumber = loan.currentInstallmentNumber + 1
+    const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
+      loan,
+      installment,
+    )
+    return {
+      loanId: loan.id,
+      installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
+      installmentTypeId: INSTALLMENT_TYPES.FLEXIBLE,
+      debt: loan.debt,
+      startsOn,
+      paymentDeadline: deadline,
+      days: 1,
+      capital: 0,
+      interest: dailyInterest,
+      interestPaid: 0,
+      total: 0,
+      installmentNumber,
+    }
+  }
 
-	private async processFlexibleLoans(loan: Loan, today: Date): Promise<void> {
-		const dailyInterestAmount = this.getDailyInterest(loan.debt, loan.interestRate)
+  private async processFlexibleLoans(loan: Loan, today: Date): Promise<void> {
+    const dailyInterestAmount = this.getDailyInterest(loan.debt, loan.interestRate)
 
-		let installment = await this.installmentService.getLastInstallment(loan.id)
-		if (installment && isAfter(installment.paymentDeadline, today)) {
-			const updatedValues = this.generateUpdateInterestDto(installment, dailyInterestAmount)
+    let installment = await this.installmentService.getLastInstallment(loan.id)
+    if (installment && isAfter(installment.paymentDeadline, today)) {
+      const updatedValues = this.generateUpdateInterestDto(installment, dailyInterestAmount)
 
-			if (this.isTodayTheDeadline(installment.paymentDeadline)) {
-				updatedValues.installmentStateId = INSTALLMENT_STATES.AWAITING_PAYMENT
-			}
-			await this.installmentService.update(installment.id, updatedValues)
-		} else {
-			const newInstallment = this.generateFlexibleInstallmentData(
-				loan,
-				installment,
-				dailyInterestAmount,
-			)
-			installment = await this.installmentService.create(newInstallment)
-			await this.loanManagementService.rawUpdate(loan.id, {
-				currentInstallmentNumber: installment.installmentNumber,
-			})
-		}
-	}
+      if (this.isTodayTheDeadline(installment.paymentDeadline)) {
+        updatedValues.installmentStateId = INSTALLMENT_STATES.AWAITING_PAYMENT
+      }
+      await this.installmentService.update(installment.id, updatedValues)
+    } else {
+      const newInstallment = this.generateFlexibleInstallmentData(
+        loan,
+        installment,
+        dailyInterestAmount,
+      )
+      installment = await this.installmentService.create(newInstallment)
+      await this.loanManagementService.rawUpdate(loan.id, {
+        currentInstallmentNumber: installment.installmentNumber,
+      })
+    }
+  }
 
-	// -------------------------------
-	// METHODS FOR FIXED CREDITS (PROGRESSIVE GENERATION)
-	// -------------------------------
+  // -------------------------------
+  // METHODS FOR FIXED CREDITS (PROGRESSIVE GENERATION)
+  // -------------------------------
 
-	/**
-	 * Generates the start date and payment deadline for a fixed installment.
-	 * @param loan The loan object containing the start date and other details.
-	 * @param installmentNumber El numero de la cuota a generar.
-	 * @returns An object containing the start date and payment deadline for the installment.
-	 */
-	private generateFixedInstallmentData(loan: Loan, installment: Installment): CreateInstallmentDto {
-		const installmentNumber = loan.currentInstallmentNumber + 1
-		const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
-			loan,
-			installment,
-		)
+  /**
+   * Generates the start date and payment deadline for a fixed installment.
+   * @param loan The loan object containing the start date and other details.
+   * @param currentInstallment El numero de la cuota a generar.
+   * @returns An object containing the start date and payment deadline for the installment.
+   */
+  private generateFixedInstallmentData(loan: Loan, installment: Installment): CreateInstallmentDto {
+    const currentInstallment = loan.currentInstallmentNumber + 1
+    const { startsOn, deadline } = this.installmentService.generateInstallmentDates(
+      loan,
+      installment,
+    )
 
-		const { interest, amortization, total } = this.installmentService.calculateFixedInstallment(
-			loan.interestRate,
-			loan.amount,
-			loan.installmentsNumber,
-			installmentNumber,
-		)
-		return {
-			loanId: loan.id,
-			installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
-			installmentTypeId: INSTALLMENT_TYPES.FIXED,
-			debt: loan.debt,
-			startsOn,
-			paymentDeadline: deadline,
-			days: 1,
-			capital: amortization,
-			interest,
-			interestPaid: 0,
-			total,
-			installmentNumber,
-		}
-	}
+    const { interest, amortization, total } = this.installmentService.calculateFixedInstallment(
+      loan.interestRate,
+      loan.amount,
+      loan.installmentsNumber,
+      currentInstallment,
+    )
+    return {
+      loanId: loan.id,
+      installmentStateId: INSTALLMENT_STATES.IN_PROGRESS,
+      installmentTypeId: INSTALLMENT_TYPES.FIXED,
+      debt: loan.debt,
+      startsOn,
+      paymentDeadline: deadline,
+      days: 1,
+      capital: amortization,
+      interest,
+      interestPaid: 0,
+      total,
+      installmentNumber: currentInstallment,
+    }
+  }
 
-	private async processFixedLoans(loan: Loan, today: Date) {
-		const currentInstallment = await this.installmentService.getLastInstallment(loan.id)
-		if (currentInstallment && isAfter(currentInstallment.paymentDeadline, today)) {
-			const updatedValues: UpdateInstallmentDto = {
-				days: currentInstallment.days + 1,
-			}
-			if (this.isTodayTheDeadline(currentInstallment.paymentDeadline)) {
-				updatedValues.installmentStateId = INSTALLMENT_STATES.AWAITING_PAYMENT
-			}
-			await this.installmentService.update(currentInstallment.id, updatedValues)
-			return true
-		} else {
-			if (loan.currentInstallmentNumber >= loan.installmentsNumber) return true
-			// Generate next installment
-			const installmentData = this.generateFixedInstallmentData(loan, currentInstallment)
-			await this.installmentService.create(installmentData)
-			await this.loanManagementService.rawUpdate(loan.id, {
-				currentInstallmentNumber: installmentData.installmentNumber,
-			})
-		}
-	}
+  private async processFixedLoans(loan: Loan, today: Date) {
+    const currentInstallment = await this.installmentService.getLastInstallment(loan.id)
+    if (currentInstallment && isAfter(currentInstallment.paymentDeadline, today)) {
+      const updatedValues: UpdateInstallmentDto = {
+        days: currentInstallment.days + 1,
+      }
+      if (this.isTodayTheDeadline(currentInstallment.paymentDeadline)) {
+        updatedValues.installmentStateId = INSTALLMENT_STATES.AWAITING_PAYMENT
+      }
+      await this.installmentService.update(currentInstallment.id, updatedValues)
+      return true
+    } else {
+      if (loan.currentInstallmentNumber >= loan.installmentsNumber) return true
+      // Generate next installment
+      const installmentData = this.generateFixedInstallmentData(loan, currentInstallment)
+      await this.installmentService.create(installmentData)
+      await this.loanManagementService.rawUpdate(loan.id, {
+        currentInstallmentNumber: installmentData.installmentNumber,
+      })
+    }
+  }
 
-	async runDailyInterest(today = this.TODAY) {
-		const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
+  async runDailyInterest(today = this.TODAY) {
+    const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
 
-		for (const loan of loans) {
-			if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED) {
-				await this.processFixedLoans(loan, today)
-			} else {
-				await this.processFlexibleLoans(loan, today)
-			}
-		}
-		return true
-	}
+    for (const loan of loans) {
+      if (loan.installmentTypeId === INSTALLMENT_TYPES.FIXED) {
+        await this.processFixedLoans(loan, today)
+      } else {
+        await this.processFlexibleLoans(loan, today)
+      }
+    }
+    return true
+  }
 
-	async setCurrentInstallmentNumber() {
-		const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
-		for (const loan of loans) {
-			const installmentsNumber = await this.installmentService.countInstallments(loan.id)
-			await this.loanManagementService.rawUpdate(loan.id, {
-				currentInstallmentNumber: installmentsNumber,
-			})
-		}
-	}
+  async setCurrentInstallmentNumber() {
+    const loans = await this.loanManagementService.getLoansByState(LOAN_STATES.IN_PROGRESS)
+    for (const loan of loans) {
+      const installmentsNumber = await this.installmentService.countInstallments(loan.id)
+      await this.loanManagementService.rawUpdate(loan.id, {
+        currentInstallmentNumber: installmentsNumber,
+      })
+    }
+  }
 }
