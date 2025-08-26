@@ -6,7 +6,6 @@ import { ProcessPaymentV2Dto, InstallmentPaymentDto } from '../dtos/process-paym
 import { UpdateInstallmentDto } from '../../installments/dtos/update-installment.dto'
 import { INSTALLMENT_TYPES, INSTALLMENT_STATES } from '../../installments/constants/installments.c'
 import { InstallmentsService } from '../../installments/installments.service'
-import { NewPaymentDto } from '../dtos/new-payment.dto'
 
 export interface PaymentProcessingResult {
   totalCapital: number
